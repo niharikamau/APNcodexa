@@ -28,7 +28,7 @@ CRISIS RESPONSE SYSTEM - FIRESTORE STRUCTURE
 - available
 
 4. emergency_requests
-- requestId
+- id
 - userId
 - serviceType
 - latitude

@@ -3,9 +3,12 @@ import 'screens/home_screen.dart';
 import 'screens/emergency_screen.dart';
 import 'screens/location_screen.dart';
 import 'screens/details_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
 
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
 
-void main() {
   runApp(const MyApp());
 }
 

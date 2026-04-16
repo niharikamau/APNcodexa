@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class DetailsScreen extends StatefulWidget {
   const DetailsScreen({super.key});
@@ -37,12 +38,35 @@ class _DetailsScreenState extends State<DetailsScreen> {
             TextField(
               controller: phoneController,
               decoration: const InputDecoration(labelText: "Phone Number"),
+              keyboardType: TextInputType.phone,
             ),
 
             const SizedBox(height: 30),
 
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
+                // ✅ validation
+                if (nameController.text.isEmpty ||
+                    phoneController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Please fill all details"),
+                    ),
+                  );
+                  return;
+                }
+
+                // 🔥 send to Firebase
+                await FirebaseFirestore.instance
+                    .collection('emergency_requests')
+                    .add({
+                  "type": emergencyType,
+                  "name": nameController.text,
+                  "phone": phoneController.text,
+                  "timestamp": FieldValue.serverTimestamp(),
+                });
+
+                // 👉 navigate after storing
                 Navigator.pushNamed(
                   context,
                   '/location',

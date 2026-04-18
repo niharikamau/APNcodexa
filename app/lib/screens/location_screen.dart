@@ -9,48 +9,45 @@ class LocationScreen extends StatefulWidget {
 }
 
 class _LocationScreenState extends State<LocationScreen> {
-  String status = "Searching nearest help...";
+  bool started = false;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
 
-    // UI message update
-    Future.delayed(const Duration(seconds: 3), () {
-      setState(() {
-        status = "Help is on the way 🚑";
-      });
-    });
+    // ✅ run only once
+    if (!started) {
+      started = true;
+      _startFlow();
+    }
+  }
 
-    // Step 1: Pending → Accepted
-    Future.delayed(const Duration(seconds: 3), () async {
-      final query = await FirebaseFirestore.instance
-          .collection('emergency_requests')
-          .orderBy('timestamp', descending: true)
-          .limit(1)
-          .get();
+  Future<void> _startFlow() async {
+    // Step 1 → Accepted
+    await Future.delayed(const Duration(seconds: 3));
 
-      if (query.docs.isNotEmpty) {
-        await query.docs.first.reference.update({
-          "status": "Accepted",
-        });
-      }
-    });
+    final query = await FirebaseFirestore.instance
+        .collection('emergency_requests')
+        .orderBy('timestamp', descending: true)
+        .limit(1)
+        .get();
 
-    // Step 2: Accepted → Completed
-    Future.delayed(const Duration(seconds: 7), () async {
-      final query = await FirebaseFirestore.instance
-          .collection('emergency_requests')
-          .orderBy('timestamp', descending: true)
-          .limit(1)
-          .get();
+    if (query.docs.isNotEmpty) {
+      await query.docs.first.reference.update({"status": "Accepted"});
+    }
 
-      if (query.docs.isNotEmpty) {
-        await query.docs.first.reference.update({
-          "status": "Completed",
-        });
-      }
-    });
+    // Step 2 → Completed
+    await Future.delayed(const Duration(seconds: 4));
+
+    final query2 = await FirebaseFirestore.instance
+        .collection('emergency_requests')
+        .orderBy('timestamp', descending: true)
+        .limit(1)
+        .get();
+
+    if (query2.docs.isNotEmpty) {
+      await query2.docs.first.reference.update({"status": "Completed"});
+    }
   }
 
   @override
@@ -78,22 +75,12 @@ class _LocationScreenState extends State<LocationScreen> {
               style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
-
             Text(
               "Name: $name\nPhone: $phone",
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16),
             ),
-
             const SizedBox(height: 20),
-
             const CircularProgressIndicator(),
-            const SizedBox(height: 20),
-
-            Text(
-              status,
-              style: const TextStyle(fontSize: 18),
-            ),
           ],
         ),
       ),

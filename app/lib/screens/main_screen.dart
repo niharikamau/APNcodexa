@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'status_screen.dart';
+import 'profile_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -15,16 +16,14 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> screens = [
     const HomeScreen(),
     const StatusScreen(),
-    const Center(child: Text("SOS Screen")),      // placeholder
-    const Center(child: Text("Profile Screen")),  // placeholder
+    const Center(child: Text("SOS Screen")), // placeholder
+    const ProfileScreen(), // 👈 replace this
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Emergency App"),
-      ),
+      appBar: AppBar(title: const Text("Emergency App")),
 
       body: screens[currentIndex],
 
@@ -37,22 +36,10 @@ class _MainScreenState extends State<MainScreen> {
           });
         },
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: "Home",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.list),
-            label: "Requests",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.warning),
-            label: "SOS",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: "Profile",
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+          BottomNavigationBarItem(icon: Icon(Icons.list), label: "Requests"),
+          BottomNavigationBarItem(icon: Icon(Icons.warning), label: "SOS"),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
         ],
       ),
     );

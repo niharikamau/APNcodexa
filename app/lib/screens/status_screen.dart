@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class StatusScreen extends StatelessWidget {
   const StatusScreen({super.key});
@@ -21,6 +22,10 @@ class StatusScreen extends StatelessWidget {
           child: StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
                 .collection('emergency_requests')
+                .where(
+                  "userId",
+                  isEqualTo: FirebaseAuth.instance.currentUser!.uid,
+                )
                 .orderBy('timestamp', descending: true)
                 .snapshots(),
             builder: (context, snapshot) {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class DetailsScreen extends StatefulWidget {
   const DetailsScreen({super.key});
@@ -72,6 +73,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
                               "phone": phoneController.text,
                               "status": "Pending",
                               "timestamp": FieldValue.serverTimestamp(),
+                                "userId": FirebaseAuth.instance.currentUser!.uid,
+
                             });
 
                         // ✅ VERY IMPORTANT

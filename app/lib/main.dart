@@ -5,6 +5,14 @@ import 'screens/location_screen.dart';
 import 'screens/details_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'screens/status_screen.dart';
+import 'screens/request_sent_screen.dart';
+import 'screens/request_details_screen.dart';
+import 'screens/tracking_screen.dart';
+import 'screens/main_screen.dart';
+
+
+
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
@@ -25,11 +33,14 @@ class MyApp extends StatelessWidget {
 
       // all routes (navigation)
       routes: {
-        '/': (context) => const HomeScreen(),
+        '/': (context) => const MainScreen(),
         '/emergency': (context) => const EmergencyScreen(),
         '/location': (context) => const LocationScreen(),
         '/details': (context) => const DetailsScreen(),
         '/status': (context) => const StatusScreen(),
+        '/requestSent': (context) => const RequestSentScreen(),
+        '/requestDetails': (context) => const RequestDetailsScreen(),
+        '/tracking': (context) => const TrackingScreen(),
       },
     );
   }

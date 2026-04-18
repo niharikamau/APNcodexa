@@ -49,9 +49,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
               onPressed: isLoading
                   ? null
                   : () async {
-                      setState(() => isLoading = true);
-
-                      // ✅ validation
+                      // ✅ validation FIRST
                       if (nameController.text.isEmpty ||
                           phoneController.text.isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -59,34 +57,46 @@ class _DetailsScreenState extends State<DetailsScreen> {
                             content: Text("Please fill all details"),
                           ),
                         );
-                        setState(() => isLoading = false);
                         return;
                       }
 
-                      // 🔥 send to Firebase
-                      await FirebaseFirestore.instance
-                          .collection('emergency_requests')
-                          .add({
-                        "type": emergencyType,
-                        "name": nameController.text,
-                        "phone": phoneController.text,
-                        "status": "Pending",
-                        "timestamp": FieldValue.serverTimestamp(),
-                      });
+                      setState(() => isLoading = true);
 
-                      // 👉 navigate after storing
-                      Navigator.pushNamed(
-                        context,
-                        '/location',
-                        arguments: {
-                          "type": emergencyType,
-                          "name": nameController.text,
-                          "phone": phoneController.text,
-                        },
-                      );
+                      try {
+                        // 🔥 send to Firebase
+                        await FirebaseFirestore.instance
+                            .collection('emergency_requests')
+                            .add({
+                              "type": emergencyType,
+                              "name": nameController.text,
+                              "phone": phoneController.text,
+                              "status": "Pending",
+                              "timestamp": FieldValue.serverTimestamp(),
+                            });
+
+                        // ✅ VERY IMPORTANT
+                        if (!mounted) return;
+
+                        // 🔥 navigate properly (no going back to loading screen)
+                        Navigator.pushReplacementNamed(
+                          context,
+                          '/requestSent',
+                          arguments: {
+                            "type": emergencyType,
+                            "name": nameController.text,
+                            "phone": phoneController.text,
+                          },
+                        );
+                      } catch (e) {
+                        // ❌ if something fails
+                        setState(() => isLoading = false);
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Something went wrong")),
+                        );
+                      }
                     },
 
-              // 🔥 LOADING UI
               child: isLoading
                   ? const SizedBox(
                       height: 20,

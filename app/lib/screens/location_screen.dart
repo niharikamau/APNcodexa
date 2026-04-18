@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LocationScreen extends StatefulWidget {
   const LocationScreen({super.key});
@@ -14,11 +15,41 @@ class _LocationScreenState extends State<LocationScreen> {
   void initState() {
     super.initState();
 
-    // simulate delay
+    // UI message update
     Future.delayed(const Duration(seconds: 3), () {
       setState(() {
-        status = "Request sent successfully ✅";
+        status = "Help is on the way 🚑";
       });
+    });
+
+    // Step 1: Pending → Accepted
+    Future.delayed(const Duration(seconds: 3), () async {
+      final query = await FirebaseFirestore.instance
+          .collection('emergency_requests')
+          .orderBy('timestamp', descending: true)
+          .limit(1)
+          .get();
+
+      if (query.docs.isNotEmpty) {
+        await query.docs.first.reference.update({
+          "status": "Accepted",
+        });
+      }
+    });
+
+    // Step 2: Accepted → Completed
+    Future.delayed(const Duration(seconds: 7), () async {
+      final query = await FirebaseFirestore.instance
+          .collection('emergency_requests')
+          .orderBy('timestamp', descending: true)
+          .limit(1)
+          .get();
+
+      if (query.docs.isNotEmpty) {
+        await query.docs.first.reference.update({
+          "status": "Completed",
+        });
+      }
     });
   }
 
@@ -37,17 +68,14 @@ class _LocationScreenState extends State<LocationScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Your Location"),
-      ),
+      appBar: AppBar(title: const Text("Your Location")),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
               "Emergency: $type",
-              style: const TextStyle(
-                  fontSize: 22, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
 

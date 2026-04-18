@@ -27,14 +27,35 @@ class StatusScreen extends StatelessWidget {
           return ListView.builder(
             itemCount: requests.length,
             itemBuilder: (context, index) {
-              final data = requests[index];
+              final doc = requests[index];
+              final data = doc.data() as Map<String, dynamic>;
+
+              // ✅ SAFE STATUS HANDLING
+              final status = data.containsKey("status")
+                  ? data["status"]
+                  : "Pending";
+
+              // 🎨 COLOR LOGIC
+              Color statusColor = Colors.orange;
+
+              if (status == "Completed") {
+                statusColor = Colors.green;
+              } else if (status == "Accepted") {
+                statusColor = Colors.blue;
+              }
 
               return Card(
                 margin: const EdgeInsets.all(10),
                 child: ListTile(
-                  title: Text(data["type"] ?? "Unknown"),
+                  title: Text(
+                    data["type"] ?? "Unknown",
+                    style: TextStyle(color: statusColor),
+                  ),
                   subtitle: Text(
-                      "Name: ${data["name"]}\nPhone: ${data["phone"]}"),
+                    "Name: ${data["name"] ?? "-"}\n"
+                    "Phone: ${data["phone"] ?? "-"}\n"
+                    "Status: $status",
+                  ),
                 ),
               );
             },

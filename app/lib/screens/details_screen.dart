@@ -12,6 +12,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
   final nameController = TextEditingController();
   final phoneController = TextEditingController();
 
+  bool isLoading = false; // 🔥 NEW
+
   @override
   Widget build(BuildContext context) {
     final emergencyType =
@@ -44,40 +46,57 @@ class _DetailsScreenState extends State<DetailsScreen> {
             const SizedBox(height: 30),
 
             ElevatedButton(
-              onPressed: () async {
-                // ✅ validation
-                if (nameController.text.isEmpty ||
-                    phoneController.text.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Please fill all details"),
-                    ),
-                  );
-                  return;
-                }
+              onPressed: isLoading
+                  ? null
+                  : () async {
+                      setState(() => isLoading = true);
 
-                // 🔥 send to Firebase
-                await FirebaseFirestore.instance
-                    .collection('emergency_requests')
-                    .add({
-                  "type": emergencyType,
-                  "name": nameController.text,
-                  "phone": phoneController.text,
-                  "timestamp": FieldValue.serverTimestamp(),
-                });
+                      // ✅ validation
+                      if (nameController.text.isEmpty ||
+                          phoneController.text.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Please fill all details"),
+                          ),
+                        );
+                        setState(() => isLoading = false);
+                        return;
+                      }
 
-                // 👉 navigate after storing
-                Navigator.pushNamed(
-                  context,
-                  '/location',
-                  arguments: {
-                    "type": emergencyType,
-                    "name": nameController.text,
-                    "phone": phoneController.text,
-                  },
-                );
-              },
-              child: const Text("Send Request"),
+                      // 🔥 send to Firebase
+                      await FirebaseFirestore.instance
+                          .collection('emergency_requests')
+                          .add({
+                        "type": emergencyType,
+                        "name": nameController.text,
+                        "phone": phoneController.text,
+                        "status": "Pending",
+                        "timestamp": FieldValue.serverTimestamp(),
+                      });
+
+                      // 👉 navigate after storing
+                      Navigator.pushNamed(
+                        context,
+                        '/location',
+                        arguments: {
+                          "type": emergencyType,
+                          "name": nameController.text,
+                          "phone": phoneController.text,
+                        },
+                      );
+                    },
+
+              // 🔥 LOADING UI
+              child: isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Text("Send Request"),
             ),
           ],
         ),

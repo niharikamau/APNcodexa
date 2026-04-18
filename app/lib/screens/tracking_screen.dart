@@ -29,19 +29,50 @@ class TrackingScreen extends StatelessWidget {
           final data = snapshot.data!.data() as Map<String, dynamic>;
           final status = data["status"] ?? "Pending";
 
+          final userLocationName = data["userLocationName"] ?? "Unknown";
+          final userLat = data["userLat"]?.toString() ?? "-";
+          final userLng = data["userLng"]?.toString() ?? "-";
+
+          final assignedServiceName =
+              data["assignedServiceName"] ?? "Not assigned";
+          final assignedServicePhone =
+              data["assignedServicePhone"] ?? "Not available";
+          final assignedServiceType = data["assignedServiceType"] ?? "Unknown";
+          final assignedServiceLat =
+              data["assignedServiceLat"]?.toString() ?? "-";
+          final assignedServiceLng =
+              data["assignedServiceLng"]?.toString() ?? "-";
+
           return Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 buildStep("Request Sent", true),
                 buildStep(
                   "Help Assigned",
-                  status == "Accepted" || status == "Completed",
+                  (data["assignedServiceName"] != null &&
+                          data["assignedServiceName"].toString().isNotEmpty) ||
+                      status == "Accepted" ||
+                      status == "Completed",
                 ),
-                buildStep(
-                  "Incident Resolved",
-                  status == "Completed",
+                buildStep("Incident Resolved", status == "Completed"),
+                const SizedBox(height: 20),
+                const Text(
+                  "User Location",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
+                Text("$userLocationName"),
+                Text("Lat: $userLat, Lng: $userLng"),
+                const SizedBox(height: 20),
+                const Text(
+                  "Assigned Service",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                Text("Name: $assignedServiceName"),
+                Text("Type: $assignedServiceType"),
+                Text("Phone: $assignedServicePhone"),
+                Text("Lat: $assignedServiceLat, Lng: $assignedServiceLng"),
               ],
             ),
           );
@@ -60,11 +91,7 @@ class TrackingScreen extends StatelessWidget {
               isDone ? Icons.check_circle : Icons.radio_button_unchecked,
               color: isDone ? Colors.green : Colors.grey,
             ),
-            Container(
-              height: 40,
-              width: 2,
-              color: Colors.grey,
-            ),
+            Container(height: 40, width: 2, color: Colors.grey),
           ],
         ),
         const SizedBox(width: 10),

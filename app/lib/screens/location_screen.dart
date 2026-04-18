@@ -1,54 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
-class LocationScreen extends StatefulWidget {
+class LocationScreen extends StatelessWidget {
   const LocationScreen({super.key});
-
-  @override
-  State<LocationScreen> createState() => _LocationScreenState();
-}
-
-class _LocationScreenState extends State<LocationScreen> {
-  bool started = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    // ✅ run only once
-    if (!started) {
-      started = true;
-      _startFlow();
-    }
-  }
-
-  Future<void> _startFlow() async {
-    // Step 1 → Accepted
-    await Future.delayed(const Duration(seconds: 3));
-
-    final query = await FirebaseFirestore.instance
-        .collection('emergency_requests')
-        .orderBy('timestamp', descending: true)
-        .limit(1)
-        .get();
-
-    if (query.docs.isNotEmpty) {
-      await query.docs.first.reference.update({"status": "Accepted"});
-    }
-
-    // Step 2 → Completed
-    await Future.delayed(const Duration(seconds: 4));
-
-    final query2 = await FirebaseFirestore.instance
-        .collection('emergency_requests')
-        .orderBy('timestamp', descending: true)
-        .limit(1)
-        .get();
-
-    if (query2.docs.isNotEmpty) {
-      await query2.docs.first.reference.update({"status": "Completed"});
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +25,10 @@ class _LocationScreenState extends State<LocationScreen> {
           children: [
             Text(
               "Emergency: $type",
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 10),
             Text(
@@ -81,6 +37,11 @@ class _LocationScreenState extends State<LocationScreen> {
             ),
             const SizedBox(height: 20),
             const CircularProgressIndicator(),
+            const SizedBox(height: 20),
+            const Text(
+              "Request sent. Waiting for dashboard updates...",
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
       ),

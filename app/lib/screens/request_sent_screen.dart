@@ -8,9 +8,11 @@ class RequestSentScreen extends StatelessWidget {
     final args =
         ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
 
+    final docId = args?["docId"];
     final type = args?["type"] ?? "Unknown";
-    final name = args?["name"] ?? "User";
-    final phone = args?["phone"] ?? "N/A";
+    final userLocationName = args?["userLocationName"] ?? "Unknown location";
+    final assignedServiceName =
+        args?["assignedServiceName"] ?? "Service not assigned";
 
     return Scaffold(
       appBar: AppBar(
@@ -20,24 +22,38 @@ class RequestSentScreen extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            const Icon(Icons.check_circle, color: Colors.green, size: 80),
-
+            const SizedBox(height: 30),
+            const Icon(Icons.check_circle, color: Colors.green, size: 90),
             const SizedBox(height: 20),
-
             const Text(
-              "Emergency Report Sent",
+              "Emergency report sent.",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-
-            const SizedBox(height: 20),
-
+            const SizedBox(height: 15),
             Text("Type: $type"),
-            Text("Name: $name"),
-            Text("Phone: $phone"),
-
+            const SizedBox(height: 8),
+            Text("Your Location: $userLocationName"),
+            const SizedBox(height: 8),
+            Text("Nearest Service Assigned: $assignedServiceName"),
+            const SizedBox(height: 20),
+            const Text(
+              "Help is on the way 🚑",
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16),
+            ),
             const SizedBox(height: 30),
-
-            const Text("Help is on the way 🚑"),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pushNamed(
+                  context,
+                  '/tracking',
+                  arguments: {
+                    "docId": docId,
+                  },
+                );
+              },
+              child: const Text("View Details"),
+            ),
           ],
         ),
       ),

@@ -13,6 +13,7 @@ import 'screens/request_details_screen.dart';
 import 'screens/tracking_screen.dart';
 import 'screens/main_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/sos_settings_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -59,6 +60,7 @@ class MyApp extends StatelessWidget {
         '/requestSent': (context) => const RequestSentScreen(),
         '/requestDetails': (context) => const RequestDetailsScreen(),
         '/tracking': (context) => const TrackingScreen(),
+        '/sosSettings': (context) => const SOSSettingsScreen(),
       },
     );
   }

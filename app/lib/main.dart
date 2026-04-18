@@ -4,7 +4,7 @@ import 'screens/emergency_screen.dart';
 import 'screens/location_screen.dart';
 import 'screens/details_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
-
+import 'screens/status_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
@@ -29,6 +29,7 @@ class MyApp extends StatelessWidget {
         '/emergency': (context) => const EmergencyScreen(),
         '/location': (context) => const LocationScreen(),
         '/details': (context) => const DetailsScreen(),
+        '/status': (context) => const StatusScreen(),
       },
     );
   }

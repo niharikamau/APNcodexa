@@ -19,6 +19,15 @@ class HomeScreen extends StatelessWidget {
               },
               child: const Text("Report Emergency"),
             ),
+
+            const SizedBox(height: 20),
+
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/status');
+              },
+              child: const Text("View Requests"),
+            ),
           ],
         ),
       ),

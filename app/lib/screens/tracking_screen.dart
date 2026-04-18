@@ -1,35 +1,51 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class TrackingScreen extends StatelessWidget {
   const TrackingScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final data =
-        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>;
-
-    final status = data["status"] ?? "Pending";
+    final args =
+        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    final docId = args["docId"] as String;
 
     return Scaffold(
       appBar: AppBar(title: const Text("Request Tracking")),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            buildStep(
-              "Request Sent",
-              true,
+      body: StreamBuilder<DocumentSnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('emergency_requests')
+            .doc(docId)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (!snapshot.hasData || !snapshot.data!.exists) {
+            return const Center(child: Text("Request not found"));
+          }
+
+          final data = snapshot.data!.data() as Map<String, dynamic>;
+          final status = data["status"] ?? "Pending";
+
+          return Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                buildStep("Request Sent", true),
+                buildStep(
+                  "Help Assigned",
+                  status == "Accepted" || status == "Completed",
+                ),
+                buildStep(
+                  "Incident Resolved",
+                  status == "Completed",
+                ),
+              ],
             ),
-            buildStep(
-              "Help Assigned",
-              status == "Accepted" || status == "Completed",
-            ),
-            buildStep(
-              "Incident Resolved",
-              status == "Completed",
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

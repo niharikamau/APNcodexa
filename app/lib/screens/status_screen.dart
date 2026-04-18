@@ -73,7 +73,7 @@ class StatusScreen extends StatelessWidget {
                         Navigator.pushNamed(
                           context,
                           '/requestDetails',
-                          arguments: data,
+                          arguments: {"docId": doc.id, "data": data},
                         );
                       },
                     ),

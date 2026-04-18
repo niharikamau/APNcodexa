@@ -31,16 +31,18 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
 
-      if (!mounted) return;
-
-      Navigator.pushReplacementNamed(context, '/');
+      // ❌ no Navigator here
+      // main.dart authStateChanges() will handle screen switching automatically
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Auth failed")),
+        const SnackBar(content: Text("Auth failed")),
       );
     }
 
-    setState(() => isLoading = false);
+    if (mounted) {
+      setState(() => isLoading = false);
+    }
   }
 
   @override
@@ -50,33 +52,35 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             TextField(
               controller: emailController,
               decoration: const InputDecoration(labelText: "Email"),
             ),
+            const SizedBox(height: 12),
             TextField(
               controller: passwordController,
               decoration: const InputDecoration(labelText: "Password"),
               obscureText: true,
             ),
             const SizedBox(height: 20),
-
             ElevatedButton(
               onPressed: isLoading ? null : handleAuth,
               child: isLoading
-                  ? const CircularProgressIndicator()
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : Text(isLogin ? "Login" : "Sign Up"),
             ),
-
             TextButton(
               onPressed: () {
                 setState(() => isLogin = !isLogin);
               },
               child: Text(
-                isLogin
-                    ? "Create account"
-                    : "Already have an account?",
+                isLogin ? "Create account" : "Already have an account?",
               ),
             ),
           ],

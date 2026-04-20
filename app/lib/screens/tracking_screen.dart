@@ -59,26 +59,26 @@ class TrackingScreen extends StatelessWidget {
           final lat = location?["latitude"]?.toString() ?? "-";
           final lng = location?["longitude"]?.toString() ?? "-";
 
-          final assignedDriver =
-              data["assignedDriver"] ??
-              data["assignedServiceName"] ??
-              "Not assigned";
+          // ✅ NEW BACKEND FIELD NAMES
+          final assignedProviderName =
+              data["assignedProviderName"] ?? "Not assigned";
 
-          final assignedPhone =
-              data["assignedPhone"] ??
-              data["servicePhone"] ??
-              data["phone"] ??
-              "-";
+          final assignedProviderPhone =
+              data["assignedProviderPhone"] ?? "-";
 
-          final vehicleType =
-              data["vehicleType"] ??
-              data["serviceType"] ??
-              "-";
+          final assignedDistanceKm =
+              data["assignedDistanceKm"]?.toString() ?? "-";
 
-          final distance = data["distance"]?.toString() ?? "-";
+          final assignedProviderId =
+              data["assignedProviderId"] ?? "-";
+
+          final assignedProviderCollection =
+              data["assignedProviderCollection"] ?? "-";
+
+          final vehicleType = data["serviceType"] ?? "-";
 
           final helpAssigned =
-              assignedDriver.toString() != "Not assigned" ||
+              assignedProviderName.toString() != "Not assigned" ||
               status == "assigned" ||
               status == "on the way" ||
               status == "resolved";
@@ -131,10 +131,12 @@ class TrackingScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text("Assigned Driver: $assignedDriver"),
-                Text("Phone: $assignedPhone"),
+                Text("Assigned Provider: $assignedProviderName"),
+                Text("Phone: $assignedProviderPhone"),
                 Text("Vehicle Type: $vehicleType"),
-                Text("Distance: $distance"),
+                Text("Distance: $assignedDistanceKm km"),
+                Text("Provider ID: $assignedProviderId"),
+                Text("Collection: $assignedProviderCollection"),
               ],
             ),
           );

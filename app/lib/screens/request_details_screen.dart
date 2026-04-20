@@ -28,7 +28,40 @@ class RequestDetailsScreen extends StatelessWidget {
     if (status == "resolved") return Icons.check_circle;
     if (status == "on the way") return Icons.local_shipping;
     if (status == "assigned") return Icons.assignment_turned_in;
-    return Icons.warning;
+    return Icons.warning_amber_rounded;
+  }
+
+  String prettyStatus(String status) {
+    if (status == "on the way") return "On The Way";
+    if (status.isEmpty) return "Pending";
+    return status[0].toUpperCase() + status.substring(1);
+  }
+
+  Widget buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontWeight: FontWeight.w500,
+              color: Colors.grey,
+            ),
+          ),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -56,49 +89,85 @@ class RequestDetailsScreen extends StatelessWidget {
           final data = snapshot.data!.data() as Map<String, dynamic>;
           final status = normalizeStatus(data["status"]);
 
-          final serviceType = data["serviceType"] ?? data["type"] ?? "unknown";
-          final user = data["user"] ?? data["name"] ?? "Unknown";
-          final phone = data["phone"] ?? "N/A";
+          final serviceType =
+              (data["serviceType"] ?? data["type"] ?? "unknown").toString();
+          final user = (data["user"] ?? data["name"] ?? "Unknown").toString();
+          final phone = (data["phone"] ?? "N/A").toString();
 
           final statusColor = getStatusColor(status);
 
-          return Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                Icon(
-                  getStatusIcon(status),
-                  color: statusColor,
-                  size: 80,
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  getStatusTitle(status),
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: statusColor,
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: statusColor.withOpacity(0.1),
+                    ),
+                    child: Icon(
+                      getStatusIcon(status),
+                      size: 80,
+                      color: statusColor,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 20),
-                Text("Service Type: $serviceType"),
-                Text("User: $user"),
-                Text("Phone: $phone"),
-                Text("Status: $status"),
-                const SizedBox(height: 30),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(
-                      context,
-                      '/tracking',
-                      arguments: {
-                        "docId": docId,
+                  const SizedBox(height: 20),
+                  Text(
+                    getStatusTitle(status),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: statusColor,
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      children: [
+                        buildInfoRow("Service", serviceType),
+                        buildInfoRow("User", user),
+                        buildInfoRow("Phone", phone),
+                        buildInfoRow("Status", prettyStatus(status)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.pushNamed(
+                          context,
+                          '/tracking',
+                          arguments: {
+                            "docId": docId,
+                          },
+                        );
                       },
-                    );
-                  },
-                  child: const Text("Details"),
-                ),
-              ],
+                      child: const Text(
+                        "View Details",
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         },

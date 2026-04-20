@@ -4,6 +4,33 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class RequestDetailsScreen extends StatelessWidget {
   const RequestDetailsScreen({super.key});
 
+  String normalizeStatus(dynamic rawStatus) {
+    if (rawStatus == null) return "pending";
+    return rawStatus.toString().trim().toLowerCase();
+  }
+
+  Color getStatusColor(String status) {
+    if (status == "pending") return Colors.orange;
+    if (status == "assigned") return Colors.blue;
+    if (status == "on the way") return Colors.purple;
+    if (status == "resolved") return Colors.green;
+    return Colors.grey;
+  }
+
+  String getStatusTitle(String status) {
+    if (status == "resolved") return "Incident Resolved";
+    if (status == "on the way") return "Responder On The Way";
+    if (status == "assigned") return "Help Assigned";
+    return "Emergency Active";
+  }
+
+  IconData getStatusIcon(String status) {
+    if (status == "resolved") return Icons.check_circle;
+    if (status == "on the way") return Icons.local_shipping;
+    if (status == "assigned") return Icons.assignment_turned_in;
+    return Icons.warning;
+  }
+
   @override
   Widget build(BuildContext context) {
     final args =
@@ -27,34 +54,35 @@ class RequestDetailsScreen extends StatelessWidget {
           }
 
           final data = snapshot.data!.data() as Map<String, dynamic>;
+          final status = normalizeStatus(data["status"]);
 
-          final type = data["type"] ?? "Unknown";
-          final name = data["name"] ?? "User";
+          final serviceType = data["serviceType"] ?? data["type"] ?? "unknown";
+          final user = data["user"] ?? data["name"] ?? "Unknown";
           final phone = data["phone"] ?? "N/A";
-          final status = data["status"] ?? "Pending";
 
-          final isResolved = status == "Completed";
+          final statusColor = getStatusColor(status);
 
           return Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
               children: [
                 Icon(
-                  isResolved ? Icons.check_circle : Icons.warning,
-                  color: isResolved ? Colors.green : Colors.orange,
+                  getStatusIcon(status),
+                  color: statusColor,
                   size: 80,
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  isResolved ? "Incident Resolved" : "Emergency Active",
-                  style: const TextStyle(
+                  getStatusTitle(status),
+                  style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
+                    color: statusColor,
                   ),
                 ),
                 const SizedBox(height: 20),
-                Text("Type: $type"),
-                Text("Name: $name"),
+                Text("Service Type: $serviceType"),
+                Text("User: $user"),
                 Text("Phone: $phone"),
                 Text("Status: $status"),
                 const SizedBox(height: 30),

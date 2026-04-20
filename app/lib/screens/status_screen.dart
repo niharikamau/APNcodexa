@@ -5,30 +5,69 @@ import 'package:firebase_auth/firebase_auth.dart';
 class StatusScreen extends StatelessWidget {
   const StatusScreen({super.key});
 
+  String normalizeStatus(dynamic rawStatus) {
+    if (rawStatus == null) return "pending";
+    return rawStatus.toString().trim().toLowerCase();
+  }
+
+  String prettyStatus(String status) {
+    if (status == "on the way") return "On The Way";
+    if (status.isEmpty) return "Pending";
+    return status[0].toUpperCase() + status.substring(1);
+  }
+
+  String getServiceLabel(Map<String, dynamic> data) {
+    final serviceType = data["serviceType"]?.toString().toLowerCase();
+
+    if (serviceType == "ambulance") return "🚑 Ambulance";
+    if (serviceType == "police") return "👮 Police";
+    if (serviceType == "fire") return "🔥 Fire";
+
+    final fallback = data["type"]?.toString();
+    return fallback ?? "Unknown Service";
+  }
+
+  Color getStatusColor(String status) {
+    if (status == "pending") return Colors.orange;
+    if (status == "assigned") return Colors.blue;
+    if (status == "on the way") return Colors.purple;
+    if (status == "resolved") return Colors.green;
+    return Colors.grey;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final currentUser = FirebaseAuth.instance.currentUser;
+
+    if (currentUser == null) {
+      return const Center(child: Text("User not logged in"));
+    }
+
     return Column(
       children: [
         const SizedBox(height: 40),
-
         const Text(
           "Emergency Requests",
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
-
         const SizedBox(height: 10),
-
         Expanded(
           child: StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
                 .collection('emergency_requests')
                 .where(
                   "userId",
-                  isEqualTo: FirebaseAuth.instance.currentUser!.uid,
+                  isEqualTo: currentUser.uid,
                 )
                 .orderBy('timestamp', descending: true)
                 .snapshots(),
             builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return Center(
+                  child: Text("Something went wrong: ${snapshot.error}"),
+                );
+              }
+
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               }
@@ -45,35 +84,35 @@ class StatusScreen extends StatelessWidget {
                   final doc = requests[index];
                   final data = doc.data() as Map<String, dynamic>;
 
-                  final status = data.containsKey("status")
-                      ? data["status"]
-                      : "Pending";
-
-                  Color statusColor = Colors.orange;
-
-                  if (status == "Completed") {
-                    statusColor = Colors.green;
-                  } else if (status == "Accepted") {
-                    statusColor = Colors.blue;
-                  }
+                  final status = normalizeStatus(data["status"]);
+                  final statusColor = getStatusColor(status);
 
                   return Card(
                     margin: const EdgeInsets.all(10),
                     child: ListTile(
                       title: Text(
-                        data["type"] ?? "Unknown",
-                        style: TextStyle(color: statusColor),
+                        getServiceLabel(data),
+                        style: TextStyle(
+                          color: statusColor,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       subtitle: Text(
-                        "Name: ${data["name"] ?? "-"}\n"
+                        "User: ${data["user"] ?? data["name"] ?? "-"}\n"
                         "Phone: ${data["phone"] ?? "-"}\n"
-                        "Status: $status",
+                        "Status: ${prettyStatus(status)}",
+                      ),
+                      trailing: Icon(
+                        Icons.chevron_right,
+                        color: statusColor,
                       ),
                       onTap: () {
                         Navigator.pushNamed(
                           context,
                           '/requestDetails',
-                          arguments: {"docId": doc.id, "data": data},
+                          arguments: {
+                            "docId": doc.id,
+                          },
                         );
                       },
                     ),

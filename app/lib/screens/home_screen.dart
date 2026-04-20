@@ -29,7 +29,9 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!autoPolice) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Auto police request is disabled in SOS settings")),
+          const SnackBar(
+            content: Text("Auto police request is disabled in SOS settings"),
+          ),
         );
         setState(() {
           isSendingSOS = false;
@@ -40,21 +42,21 @@ class _HomeScreenState extends State<HomeScreen> {
       final docRef = await FirebaseFirestore.instance
           .collection('emergency_requests')
           .add({
-        "type": "Police SOS",
-        "name": "SOS User",
-        "phone": "N/A",
-        "status": "Pending",
-        "timestamp": FieldValue.serverTimestamp(),
-        "userId": FirebaseAuth.instance.currentUser!.uid,
-        "userLocationName": "Sector 62, Noida",
-        "userLat": 28.6280,
-        "userLng": 77.3649,
-        "assignedServiceName": "Police Unit (Auto Assigned)",
-        "assignedServiceType": "Police",
-        "assignedServicePhone": "100",
-        "assignedServiceLat": 28.6295,
-        "assignedServiceLng": 77.3620,
-      });
+            "serviceType": "police",
+            "userId": FirebaseAuth.instance.currentUser!.uid,
+            "user": "SOS User",
+            "phone": "N/A",
+
+            "location": {"latitude": 28.6280, "longitude": 77.3649},
+
+            "status": "pending",
+            "timestamp": FieldValue.serverTimestamp(),
+
+            // temporary compatibility
+            "type": "Police SOS",
+            "name": "SOS User",
+            "userLocationName": "Sector 62, Noida",
+          });
 
       if (!mounted) return;
 
@@ -73,9 +75,9 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("SOS failed: $e")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("SOS failed: $e")));
     } finally {
       if (mounted) {
         setState(() {
@@ -94,10 +96,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           const Text(
             "🚨 Emergency App",
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 30),
           const Card(
@@ -107,9 +106,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Icon(Icons.location_on, color: Colors.red),
                   SizedBox(width: 10),
-                  Expanded(
-                    child: Text("Your Location: Sector 62, Noida"),
-                  ),
+                  Expanded(child: Text("Your Location: Sector 62, Noida")),
                 ],
               ),
             ),
@@ -118,10 +115,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 60,
-                vertical: 24,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 24),
             ),
             onPressed: isSendingSOS ? null : triggerSOS,
             child: isSendingSOS
@@ -145,10 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 20),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 40,
-                vertical: 18,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 18),
             ),
             onPressed: () {
               Navigator.pushNamed(context, '/emergency');

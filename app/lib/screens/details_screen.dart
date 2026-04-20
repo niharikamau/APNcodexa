@@ -72,24 +72,38 @@ class _DetailsScreenState extends State<DetailsScreen> {
                       setState(() => isLoading = true);
 
                       try {
+                        print("🔥 Sending request to Firebase...");
+
                         final docRef = await FirebaseFirestore.instance
                             .collection('emergency_requests')
                             .add({
-                          // backend format your friend wants
-                          "serviceType": getServiceType(emergencyType),
-                          "userId": FirebaseAuth.instance.currentUser!.uid,
-                          "location": {
-                            "latitude": dummyUserLocation["lat"],
-                            "longitude": dummyUserLocation["lng"],
-                          },
-                          "status": "pending",
+                              "serviceType": emergencyType.contains("Medical")
+                                  ? "ambulance"
+                                  : emergencyType.contains("Police")
+                                  ? "police"
+                                  : "fire",
 
-                          // keep these temporarily so your current Flutter UI does not break
-                          "type": emergencyType,
-                          "name": nameController.text,
-                          "phone": phoneController.text,
-                          "userLocationName": dummyUserLocation["name"],
-                        });
+                              "userId": FirebaseAuth.instance.currentUser!.uid,
+                              "user": nameController.text,
+                              "phone": phoneController.text,
+
+                              "location": {
+                                "latitude": 28.6280,
+                                "longitude": 77.3649,
+                              },
+
+                              "status": "pending",
+                              "timestamp": FieldValue.serverTimestamp(),
+
+                              // temporary compatibility fields for current Flutter screens
+                              "type": emergencyType,
+                              "name": nameController.text,
+                              "userLocationName": "Sector 62, Noida",
+                            });
+
+                        print(
+                          "✅ Request sent successfully. Doc ID: ${docRef.id}",
+                        );
 
                         if (!mounted) return;
 
@@ -106,11 +120,15 @@ class _DetailsScreenState extends State<DetailsScreen> {
                           },
                         );
                       } catch (e) {
-                        setState(() => isLoading = false);
+                        print("❌ Firebase write failed: $e");
 
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("Something went wrong: $e")),
-                        );
+                        if (mounted) {
+                          setState(() => isLoading = false);
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Something went wrong: $e")),
+                          );
+                        }
                       }
                     },
               child: isLoading

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "53096719736",
+    "project_id": "crisis-response-system",
+    "storage_bucket": "crisis-response-system.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:53096719736:android:b8d25456c0a676f01b148d",
+        "android_client_info": {
+          "package_name": "com.example.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB6J-c66d1lH0l8uvwcIqOpdFLaEfqjQGw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

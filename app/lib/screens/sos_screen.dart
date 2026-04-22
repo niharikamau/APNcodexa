@@ -29,8 +29,8 @@ class SOSScreen extends StatelessWidget {
               "timestamp": FieldValue.serverTimestamp(),
               "userId": FirebaseAuth.instance.currentUser!.uid,
               "userLocationName": "Emergency Location",
-              "userLat": 28.6280,
-              "userLng": 77.3649,
+              "userLat": 23.55105395451701,
+              "userLng": 34.895463666438,
             });
           }
 

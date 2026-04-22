@@ -53,25 +53,19 @@ class TrackingScreen extends StatelessWidget {
 
           final data = snapshot.data!.data() as Map<String, dynamic>;
           final status = normalizeStatus(data["status"]);
-          final statusColor = getStatusColor(status);
 
           final location = data["location"] as Map<String, dynamic>?;
           final lat = location?["latitude"]?.toString() ?? "-";
           final lng = location?["longitude"]?.toString() ?? "-";
 
-          // ✅ NEW BACKEND FIELD NAMES
           final assignedProviderName =
               data["assignedProviderName"] ?? "Not assigned";
-
           final assignedProviderPhone =
               data["assignedProviderPhone"] ?? "-";
-
           final assignedDistanceKm =
               data["assignedDistanceKm"]?.toString() ?? "-";
-
           final assignedProviderId =
               data["assignedProviderId"] ?? "-";
-
           final assignedProviderCollection =
               data["assignedProviderCollection"] ?? "-";
 
@@ -88,55 +82,64 @@ class TrackingScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "Current Status: ${prettyStatus(status)}",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: statusColor,
+                Center(
+                  child: Column(
+                    children: [
+                      const Text(
+                        "Current Status",
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        prettyStatus(status),
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: getStatusColor(status),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 25),
 
                 buildStep("Request Sent", true),
-                buildStep("Help Assigned", helpAssigned),
+                buildStep(
+                  "Help Assigned",
+                  helpAssigned,
+                ),
                 buildStep(
                   "On The Way",
                   status == "on_the_way" || status == "resolved",
                 ),
                 buildStep(
-                  "Incident Resolved",
+                  "Resolved",
                   status == "resolved",
                 ),
 
-                const SizedBox(height: 25),
+                const SizedBox(height: 30),
 
-                const Text(
-                  "User Location",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                buildCard(
+                  title: "📍 User Location",
+                  children: [
+                    buildRow("Latitude", lat),
+                    buildRow("Longitude", lng),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                Text("Lat: $lat, Lng: $lng"),
 
-                const SizedBox(height: 25),
+                const SizedBox(height: 20),
 
-                const Text(
-                  "Assigned Service",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                buildCard(
+                  title: "🚑 Assigned Service",
+                  children: [
+                    buildRow("Provider", assignedProviderName.toString()),
+                    buildRow("Phone", assignedProviderPhone.toString()),
+                    buildRow("Vehicle", vehicleType.toString()),
+                    buildRow("Distance", "$assignedDistanceKm km"),
+                    buildRow("Provider ID", assignedProviderId.toString()),
+                    buildRow("Collection", assignedProviderCollection.toString()),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                Text("Assigned Provider: $assignedProviderName"),
-                Text("Phone: $assignedProviderPhone"),
-                Text("Vehicle Type: $vehicleType"),
-                Text("Distance: $assignedDistanceKm km"),
-                Text("Provider ID: $assignedProviderId"),
-                Text("Collection: $assignedProviderCollection"),
               ],
             ),
           );
@@ -155,11 +158,7 @@ class TrackingScreen extends StatelessWidget {
               isDone ? Icons.check_circle : Icons.radio_button_unchecked,
               color: isDone ? Colors.green : Colors.grey,
             ),
-            Container(
-              height: 40,
-              width: 2,
-              color: Colors.grey,
-            ),
+            Container(height: 40, width: 2, color: Colors.grey),
           ],
         ),
         const SizedBox(width: 10),
@@ -175,6 +174,47 @@ class TrackingScreen extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget buildCard({required String title, required List<Widget> children}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget buildRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: Colors.grey)),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

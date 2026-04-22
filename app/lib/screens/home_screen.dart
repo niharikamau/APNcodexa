@@ -47,7 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
             "user": "SOS User",
             "phone": "N/A",
 
-            "location": {"latitude": 28.6280, "longitude": 77.3649},
+            "location": {"latitude": 23.55105395451701, "longitude": 34.895463666438},
 
             "status": "pending",
             "timestamp": FieldValue.serverTimestamp(),

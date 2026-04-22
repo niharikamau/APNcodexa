@@ -18,8 +18,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
   // Dummy location for now
   final Map<String, dynamic> dummyUserLocation = {
     "name": "Sector 62, Noida",
-    "lat": 28.6280,
-    "lng": 77.3649,
+    "lat": 23.52,
+    "lng": 34.89,
   };
 
   String getServiceType(String emergencyType) {
@@ -88,8 +88,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
                               "phone": phoneController.text,
 
                               "location": {
-                                "latitude": 28.6280,
-                                "longitude": 77.3649,
+                                "latitude": 23.52,
+                                "longitude": 34.89,
                               },
 
                               "status": "pending",

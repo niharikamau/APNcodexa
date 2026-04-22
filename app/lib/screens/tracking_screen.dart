@@ -10,7 +10,7 @@ class TrackingScreen extends StatelessWidget {
   }
 
   String prettyStatus(String status) {
-    if (status == "on the way") return "On The Way";
+    if (status == "on_the_way") return "On The Way";
     if (status.isEmpty) return "Pending";
     return status[0].toUpperCase() + status.substring(1);
   }
@@ -18,7 +18,7 @@ class TrackingScreen extends StatelessWidget {
   Color getStatusColor(String status) {
     if (status == "pending") return Colors.orange;
     if (status == "assigned") return Colors.blue;
-    if (status == "on the way") return Colors.purple;
+    if (status == "on_the_way") return Colors.purple;
     if (status == "resolved") return Colors.green;
     return Colors.grey;
   }
@@ -80,7 +80,7 @@ class TrackingScreen extends StatelessWidget {
           final helpAssigned =
               assignedProviderName.toString() != "Not assigned" ||
               status == "assigned" ||
-              status == "on the way" ||
+              status == "on_the_way" ||
               status == "resolved";
 
           return SingleChildScrollView(
@@ -102,7 +102,7 @@ class TrackingScreen extends StatelessWidget {
                 buildStep("Help Assigned", helpAssigned),
                 buildStep(
                   "On The Way",
-                  status == "on the way" || status == "resolved",
+                  status == "on_the_way" || status == "resolved",
                 ),
                 buildStep(
                   "Incident Resolved",

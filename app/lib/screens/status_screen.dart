@@ -11,7 +11,7 @@ class StatusScreen extends StatelessWidget {
   }
 
   String prettyStatus(String status) {
-    if (status == "on the way") return "On The Way";
+    if (status == "on_the_way") return "On The Way";
     if (status.isEmpty) return "Pending";
     return status[0].toUpperCase() + status.substring(1);
   }
@@ -30,7 +30,7 @@ class StatusScreen extends StatelessWidget {
   Color getStatusColor(String status) {
     if (status == "pending") return Colors.orange;
     if (status == "assigned") return Colors.blue;
-    if (status == "on the way") return Colors.purple;
+    if (status == "on_the_way") return Colors.purple;
     if (status == "resolved") return Colors.green;
     return Colors.grey;
   }

@@ -12,27 +12,27 @@ class RequestDetailsScreen extends StatelessWidget {
   Color getStatusColor(String status) {
     if (status == "pending") return Colors.orange;
     if (status == "assigned") return Colors.blue;
-    if (status == "on the way") return Colors.purple;
+    if (status == "on_the_way") return Colors.purple;
     if (status == "resolved") return Colors.green;
     return Colors.grey;
   }
 
   String getStatusTitle(String status) {
     if (status == "resolved") return "Incident Resolved";
-    if (status == "on the way") return "Responder On The Way";
+    if (status == "on_the_way") return "Responder On The Way";
     if (status == "assigned") return "Help Assigned";
     return "Emergency Active";
   }
 
   IconData getStatusIcon(String status) {
     if (status == "resolved") return Icons.check_circle;
-    if (status == "on the way") return Icons.local_shipping;
+    if (status == "on_the_way") return Icons.local_shipping;
     if (status == "assigned") return Icons.assignment_turned_in;
     return Icons.warning_amber_rounded;
   }
 
   String prettyStatus(String status) {
-    if (status == "on the way") return "On The Way";
+    if (status == "on_the_way") return "On The Way";
     if (status.isEmpty) return "Pending";
     return status[0].toUpperCase() + status.substring(1);
   }

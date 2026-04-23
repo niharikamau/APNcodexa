@@ -23,6 +23,13 @@ class TrackingScreen extends StatelessWidget {
     return Colors.grey;
   }
 
+  Color getUrgencyColor(String urgency) {
+    if (urgency == "critical") return Colors.red;
+    if (urgency == "high") return Colors.orange;
+    if (urgency == "medium") return Colors.blue;
+    return Colors.grey;
+  }
+
   @override
   Widget build(BuildContext context) {
     final args =
@@ -52,6 +59,7 @@ class TrackingScreen extends StatelessWidget {
           }
 
           final data = snapshot.data!.data() as Map<String, dynamic>;
+          final urgency = (data["urgency"] ?? "low").toString().toLowerCase();
           final status = normalizeStatus(data["status"]);
 
           final location = data["location"] as Map<String, dynamic>?;
@@ -60,12 +68,10 @@ class TrackingScreen extends StatelessWidget {
 
           final assignedProviderName =
               data["assignedProviderName"] ?? "Not assigned";
-          final assignedProviderPhone =
-              data["assignedProviderPhone"] ?? "-";
+          final assignedProviderPhone = data["assignedProviderPhone"] ?? "-";
           final assignedDistanceKm =
               data["assignedDistanceKm"]?.toString() ?? "-";
-          final assignedProviderId =
-              data["assignedProviderId"] ?? "-";
+          final assignedProviderId = data["assignedProviderId"] ?? "-";
           final assignedProviderCollection =
               data["assignedProviderCollection"] ?? "-";
 
@@ -101,21 +107,46 @@ class TrackingScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 25),
+
+                const SizedBox(height: 16),
+
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: getUrgencyColor(urgency).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "Urgency",
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey,
+                        ),
+                      ),
+                      Text(
+                        urgency.toUpperCase(),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: getUrgencyColor(urgency),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
 
                 buildStep("Request Sent", true),
-                buildStep(
-                  "Help Assigned",
-                  helpAssigned,
-                ),
+                buildStep("Help Assigned", helpAssigned),
                 buildStep(
                   "On The Way",
                   status == "on_the_way" || status == "resolved",
                 ),
-                buildStep(
-                  "Resolved",
-                  status == "resolved",
-                ),
+                buildStep("Resolved", status == "resolved"),
 
                 const SizedBox(height: 30),
 
@@ -137,7 +168,10 @@ class TrackingScreen extends StatelessWidget {
                     buildRow("Vehicle", vehicleType.toString()),
                     buildRow("Distance", "$assignedDistanceKm km"),
                     buildRow("Provider ID", assignedProviderId.toString()),
-                    buildRow("Collection", assignedProviderCollection.toString()),
+                    buildRow(
+                      "Collection",
+                      assignedProviderCollection.toString(),
+                    ),
                   ],
                 ),
               ],

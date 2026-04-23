@@ -10,29 +10,56 @@ class DetailsScreen extends StatefulWidget {
 }
 
 class _DetailsScreenState extends State<DetailsScreen> {
+  Future<String> createRequestWithCustomId(Map<String, dynamic> data) async {
+    final firestore = FirebaseFirestore.instance;
+    final counterRef = firestore.collection('counters').doc('requests');
+
+    return firestore.runTransaction((transaction) async {
+      final counterSnap = await transaction.get(counterRef);
+
+      int current = 0;
+      if (counterSnap.exists) {
+        current = (counterSnap.data()?["current"] ?? 0) as int;
+      }
+
+      current++;
+
+      final id = "R${current.toString().padLeft(3, '0')}";
+      final requestRef = firestore.collection('emergency_requests').doc(id);
+
+      transaction.set(counterRef, {"current": current});
+      transaction.set(requestRef, data);
+
+      return id;
+    });
+  }
+
   final nameController = TextEditingController();
   final phoneController = TextEditingController();
 
   bool isLoading = false;
 
-  // Dummy location for now
   final Map<String, dynamic> dummyUserLocation = {
     "name": "Sector 62, Noida",
     "lat": 23.55105395451701,
     "lng": 34.895463666438,
   };
 
-  String getServiceType(String emergencyType) {
-    if (emergencyType.contains("Medical")) return "ambulance";
-    if (emergencyType.contains("Police")) return "police";
-    if (emergencyType.contains("Fire")) return "fire";
-    return "unknown";
+  String getPrettyServiceLabel(String serviceType) {
+    if (serviceType == "ambulance") return "🚑 Medical";
+    if (serviceType == "police") return "👮 Police";
+    if (serviceType == "fire") return "🔥 Fire";
+    return serviceType;
   }
 
   @override
   Widget build(BuildContext context) {
-    final emergencyType =
-        ModalRoute.of(context)?.settings.arguments as String? ?? "Unknown";
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+
+    final services = (args?["services"] as List?)?.cast<String>() ?? [];
+    final description = args?["description"]?.toString() ?? "";
+    final urgency = args?["urgency"]?.toString() ?? "low";
 
     return Scaffold(
       appBar: AppBar(title: const Text("Enter Details")),
@@ -41,9 +68,19 @@ class _DetailsScreenState extends State<DetailsScreen> {
         child: Column(
           children: [
             Text(
-              emergencyType,
+              services.isEmpty
+                  ? "No service detected"
+                  : services.map(getPrettyServiceLabel).join(" + "),
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
             ),
+            const SizedBox(height: 12),
+            if (description.isNotEmpty)
+              Text(
+                'Description: "$description"',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.grey),
+              ),
             const SizedBox(height: 20),
             TextField(
               controller: nameController,
@@ -69,41 +106,51 @@ class _DetailsScreenState extends State<DetailsScreen> {
                         return;
                       }
 
+                      if (services.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              "No valid emergency service detected",
+                            ),
+                          ),
+                        );
+                        return;
+                      }
+
                       setState(() => isLoading = true);
 
                       try {
-                        print("🔥 Sending request to Firebase...");
+                        final incidentId =
+                            "INC-${DateTime.now().millisecondsSinceEpoch}";
+                        final createdDocIds = <String>[];
 
-                        final docRef = await FirebaseFirestore.instance
-                            .collection('emergency_requests')
-                            .add({
-                              "serviceType": emergencyType.contains("Medical")
-                                  ? "ambulance"
-                                  : emergencyType.contains("Police")
-                                  ? "police"
-                                  : "fire",
+                        for (final serviceType in services) {
+                          final requestData = {
+                            "incidentId": incidentId,
+                            "serviceType": serviceType,
+                            "userId": FirebaseAuth.instance.currentUser!.uid,
+                            "user": nameController.text,
+                            "phone": phoneController.text,
+                            "description": description,
+                            "urgency": urgency,
+                            "location": {
+                              "latitude": dummyUserLocation["lat"],
+                              "longitude": dummyUserLocation["lng"],
+                            },
+                            "status": "pending",
+                            "timestamp": FieldValue.serverTimestamp(),
 
-                              "userId": FirebaseAuth.instance.currentUser!.uid,
-                              "user": nameController.text,
-                              "phone": phoneController.text,
+                            // temporary compatibility
+                            "type": getPrettyServiceLabel(serviceType),
+                            "name": nameController.text,
+                            "userLocationName": dummyUserLocation["name"],
+                          };
 
-                              "location": {
-                                "latitude": dummyUserLocation["lat"],
-                                "longitude": dummyUserLocation["lng"],
-                              },
-
-                              "status": "pending",
-                              "timestamp": FieldValue.serverTimestamp(),
-
-                              // temporary compatibility fields for current Flutter screens
-                              "type": emergencyType,
-                              "name": nameController.text,
-                              "userLocationName": "Sector 62, Noida",
-                            });
-
-                        print(
-                          "✅ Request sent successfully. Doc ID: ${docRef.id}",
-                        );
+                          final requestId = await createRequestWithCustomId(
+                            requestData,
+                          );
+                          createdDocIds.add(requestId);
+                        }
 
                         if (!mounted) return;
 
@@ -111,20 +158,22 @@ class _DetailsScreenState extends State<DetailsScreen> {
                           context,
                           '/requestSent',
                           arguments: {
-                            "docId": docRef.id,
-                            "type": emergencyType,
+                            "docId": createdDocIds.isNotEmpty
+                                ? createdDocIds.first
+                                : null,
+                            "docIds": createdDocIds,
+                            "incidentId": incidentId,
+                            "type": services
+                                .map(getPrettyServiceLabel)
+                                .join(" + "),
                             "name": nameController.text,
                             "phone": phoneController.text,
                             "userLocationName": dummyUserLocation["name"],
-                            "assignedServiceName": "To be assigned",
                           },
                         );
                       } catch (e) {
-                        print("❌ Firebase write failed: $e");
-
                         if (mounted) {
                           setState(() => isLoading = false);
-
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text("Something went wrong: $e")),
                           );

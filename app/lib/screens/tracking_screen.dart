@@ -37,7 +37,17 @@ class TrackingScreen extends StatelessWidget {
     final docId = args["docId"] as String;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Request Tracking")),
+      appBar: AppBar(
+        title: const Text("Request Tracking"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.home),
+            onPressed: () {
+              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+            },
+          ),
+        ],
+      ),
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
             .collection('emergency_requests')

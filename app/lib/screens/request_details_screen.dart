@@ -54,9 +54,7 @@ class RequestDetailsScreen extends StatelessWidget {
             child: Text(
               value,
               textAlign: TextAlign.right,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -71,7 +69,17 @@ class RequestDetailsScreen extends StatelessWidget {
     final docId = args["docId"] as String;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Emergency Details")),
+      appBar: AppBar(
+        title: const Text("Emergency Details"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.home),
+            onPressed: () {
+              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+            },
+          ),
+        ],
+      ),
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
             .collection('emergency_requests')
@@ -89,8 +97,8 @@ class RequestDetailsScreen extends StatelessWidget {
           final data = snapshot.data!.data() as Map<String, dynamic>;
           final status = normalizeStatus(data["status"]);
 
-          final serviceType =
-              (data["serviceType"] ?? data["type"] ?? "unknown").toString();
+          final serviceType = (data["serviceType"] ?? data["type"] ?? "unknown")
+              .toString();
           final user = (data["user"] ?? data["name"] ?? "Unknown").toString();
           final phone = (data["phone"] ?? "N/A").toString();
 
@@ -155,9 +163,7 @@ class RequestDetailsScreen extends StatelessWidget {
                         Navigator.pushNamed(
                           context,
                           '/tracking',
-                          arguments: {
-                            "docId": docId,
-                          },
+                          arguments: {"docId": docId},
                         );
                       },
                       child: const Text(

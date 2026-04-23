@@ -24,8 +24,35 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Emergency App"),
+      appBar: AppBar(title: const Text("Emergency App")),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            const DrawerHeader(
+              decoration: BoxDecoration(color: Colors.blue),
+              child: Align(
+                alignment: Alignment.bottomLeft,
+                child: Text(
+                  "Emergency App",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.folder_copy),
+              title: const Text("Incidents"),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/incidentList');
+              },
+            ),
+          ],
+        ),
       ),
       body: screens[currentIndex],
       bottomNavigationBar: BottomNavigationBar(
@@ -37,22 +64,10 @@ class _MainScreenState extends State<MainScreen> {
           });
         },
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: "Home",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.list),
-            label: "Requests",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.warning),
-            label: "SOS",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: "Profile",
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+          BottomNavigationBarItem(icon: Icon(Icons.list), label: "Requests"),
+          BottomNavigationBarItem(icon: Icon(Icons.warning), label: "SOS"),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
         ],
       ),
     );

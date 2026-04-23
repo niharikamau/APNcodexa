@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class IncidentRequestsScreen extends StatelessWidget {
   const IncidentRequestsScreen({super.key});
@@ -31,20 +32,56 @@ class IncidentRequestsScreen extends StatelessWidget {
     return Colors.grey;
   }
 
+  bool isSosRequest(Map<String, dynamic> data) {
+    return data["isSOS"] == true ||
+        (data["type"]?.toString().contains("SOS") ?? false);
+  }
+
   @override
   Widget build(BuildContext context) {
     final args =
         ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     final incidentId = args["incidentId"]?.toString() ?? "";
+    final isSosGroup = args["isSosGroup"] == true;
+    final currentUser = FirebaseAuth.instance.currentUser;
+
+    if (currentUser == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(isSosGroup ? "SOS Requests" : "Incident Requests"),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.home),
+              onPressed: () {
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/',
+                  (route) => false,
+                );
+              },
+            ),
+          ],
+        ),
+        body: const Center(child: Text("User not logged in")),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Incident Requests"),
+        title: Text(isSosGroup ? "SOS Requests" : "Incident Requests"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.home),
+            onPressed: () {
+              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+            },
+          ),
+        ],
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('emergency_requests')
-            .where("incidentId", isEqualTo: incidentId)
+            .where("userId", isEqualTo: currentUser.uid)
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
@@ -57,11 +94,30 @@ class IncidentRequestsScreen extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text("No requests found for this incident"));
+          if (!snapshot.hasData) {
+            return const Center(child: Text("No requests found"));
           }
 
-          final docs = snapshot.data!.docs;
+          final allDocs = snapshot.data!.docs;
+
+          final filteredDocs = allDocs.where((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+
+            if (isSosGroup) {
+              return isSosRequest(data) &&
+                  ((data["incidentId"] == null) ||
+                      (data["incidentId"]?.toString().startsWith("SOS-") ??
+                          false));
+            }
+
+            return (data["incidentId"]?.toString() ?? "") == incidentId;
+          }).toList();
+
+          if (filteredDocs.isEmpty) {
+            return const Center(
+              child: Text("No requests found for this incident"),
+            );
+          }
 
           return Padding(
             padding: const EdgeInsets.all(16),
@@ -75,16 +131,16 @@ class IncidentRequestsScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Text(
-                    "Incident ID: $incidentId",
+                    isSosGroup ? "SOS Incidents" : "Incident ID: $incidentId",
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
                 const SizedBox(height: 16),
                 Expanded(
                   child: ListView.builder(
-                    itemCount: docs.length,
+                    itemCount: filteredDocs.length,
                     itemBuilder: (context, index) {
-                      final doc = docs[index];
+                      final doc = filteredDocs[index];
                       final data = doc.data() as Map<String, dynamic>;
                       final status = normalizeStatus(data["status"]);
                       final statusColor = getStatusColor(status);
@@ -108,9 +164,7 @@ class IncidentRequestsScreen extends StatelessWidget {
                             Navigator.pushNamed(
                               context,
                               '/tracking',
-                              arguments: {
-                                "docId": doc.id,
-                              },
+                              arguments: {"docId": doc.id},
                             );
                           },
                         ),

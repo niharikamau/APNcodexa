@@ -9,7 +9,7 @@ class EmergencyScreen extends StatefulWidget {
 }
 
 class _EmergencyScreenState extends State<EmergencyScreen> {
-  String? selectedService;
+  Set<String> selectedServices = {};
   final TextEditingController descriptionController = TextEditingController();
 
   late stt.SpeechToText _speech;
@@ -84,59 +84,56 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
 
   // 🎤 SPEECH FUNCTION
   void _toggleListening() async {
-  try {
-    if (!_isListening) {
-      bool available = await _speech.initialize(
-        onStatus: (status) {
-          print("Speech status: $status");
-        },
-        onError: (errorNotification) {
-          print("Speech error: $errorNotification");
-        },
-      );
-
-      print("Speech available: $available");
-
-      if (!available) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Speech recognition not available on this device"),
-          ),
+    try {
+      if (!_isListening) {
+        bool available = await _speech.initialize(
+          onStatus: (status) {
+            print("Speech status: $status");
+          },
+          onError: (errorNotification) {
+            print("Speech error: $errorNotification");
+          },
         );
-        return;
+
+        print("Speech available: $available");
+
+        if (!available) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Speech recognition not available on this device"),
+            ),
+          );
+          return;
+        }
+
+        setState(() => _isListening = true);
+
+        await _speech.listen(
+          onResult: (result) {
+            setState(() {
+              descriptionController.text = result.recognizedWords;
+            });
+          },
+        );
+      } else {
+        setState(() => _isListening = false);
+        await _speech.stop();
       }
-
-      setState(() => _isListening = true);
-
-      await _speech.listen(
-        onResult: (result) {
-          setState(() {
-            descriptionController.text = result.recognizedWords;
-          });
-        },
-      );
-    } else {
-      setState(() => _isListening = false);
-      await _speech.stop();
+    } catch (e) {
+      print("Mic error: $e");
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Mic failed: $e")));
     }
-  } catch (e) {
-    print("Mic error: $e");
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Mic failed: $e")),
-    );
   }
-}
 
   void handleSubmit() {
     final description = descriptionController.text.trim();
 
     Set<String> finalServices = {};
-
-    if (selectedService != null) {
-      finalServices.add(selectedService!);
-    }
+    finalServices.addAll(selectedServices);
 
     finalServices.addAll(classifyServices(description));
 
@@ -163,7 +160,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
   }
 
   Widget buildServiceButton(String label, String value) {
-    final isSelected = selectedService == value;
+    final isSelected = selectedServices.contains(value);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -176,7 +173,11 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
           ),
           onPressed: () {
             setState(() {
-              selectedService = selectedService == value ? null : value;
+              if (selectedServices.contains(value)) {
+                selectedServices.remove(value);
+              } else {
+                selectedServices.add(value);
+              }
             });
           },
           child: Text(label, style: const TextStyle(fontSize: 18)),
@@ -189,65 +190,66 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Emergency")),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            const Text(
-              "Select Emergency Type (Optional)",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              const Text(
+                "Select Emergency Type (Optional)",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
 
-            const SizedBox(height: 20),
+              buildServiceButton("🚑 Medical", "ambulance"),
+              buildServiceButton("🔥 Fire", "fire"),
+              buildServiceButton("👮 Police", "police"),
 
-            buildServiceButton("🚑 Medical", "ambulance"),
-            buildServiceButton("🔥 Fire", "fire"),
-            buildServiceButton("👮 Police", "police"),
+              const SizedBox(height: 25),
 
-            const SizedBox(height: 25),
-
-            // 🔥 DESCRIPTION + MIC
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: descriptionController,
-                    maxLines: 4,
-                    decoration: InputDecoration(
-                      hintText: "Describe emergency or use mic...",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: descriptionController,
+                      maxLines: 4,
+                      decoration: InputDecoration(
+                        hintText: "Describe emergency or use mic...",
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                IconButton(
-                  icon: Icon(
-                    _isListening ? Icons.mic : Icons.mic_none,
-                    color: _isListening ? Colors.red : Colors.grey,
+                  const SizedBox(width: 10),
+                  IconButton(
+                    icon: Icon(
+                      _isListening ? Icons.mic : Icons.mic_none,
+                      color: _isListening ? Colors.red : Colors.grey,
+                    ),
+                    onPressed: _toggleListening,
                   ),
-                  onPressed: _toggleListening,
-                ),
-              ],
-            ),
+                ],
+              ),
 
-            const SizedBox(height: 25),
+              const SizedBox(height: 25),
 
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: handleSubmit,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: const Text(
-                  "Send Emergency Request",
-                  style: TextStyle(fontSize: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: handleSubmit,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: const Text(
+                    "Send Emergency Request",
+                    style: TextStyle(fontSize: 16),
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

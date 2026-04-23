@@ -3,7 +3,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 // Screens
-import 'screens/home_screen.dart';
 import 'screens/emergency_screen.dart';
 import 'screens/location_screen.dart';
 import 'screens/details_screen.dart';
@@ -15,6 +14,7 @@ import 'screens/main_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/sos_settings_screen.dart';
 import 'screens/incident_requests_screen.dart';
+import 'screens/incident_list_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,28 +31,23 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
 
-      // 🔥 AUTH BASED ENTRY (THIS IS THE KEY CHANGE)
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
-          // loading
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Scaffold(
               body: Center(child: CircularProgressIndicator()),
             );
           }
 
-          // logged in
           if (snapshot.hasData) {
             return const MainScreen();
           }
 
-          // not logged in
           return const LoginScreen();
         },
       ),
 
-      // routes (keep these)
       routes: {
         '/emergency': (context) => const EmergencyScreen(),
         '/location': (context) => const LocationScreen(),
@@ -63,6 +58,7 @@ class MyApp extends StatelessWidget {
         '/tracking': (context) => const TrackingScreen(),
         '/sosSettings': (context) => const SOSSettingsScreen(),
         '/incidentRequests': (context) => const IncidentRequestsScreen(),
+        '/incidentList': (context) => const IncidentListScreen(),
       },
     );
   }

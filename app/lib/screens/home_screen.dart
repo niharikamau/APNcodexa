@@ -22,8 +22,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       final prefs = await SharedPreferences.getInstance();
-
-      // for now, even if settings are empty, SOS should still work
       final autoPolice = prefs.getBool("autoPolice") ?? true;
 
       if (!autoPolice) {
@@ -39,20 +37,26 @@ class _HomeScreenState extends State<HomeScreen> {
         return;
       }
 
+      final incidentId = "SOS-${DateTime.now().millisecondsSinceEpoch}";
+
       final docRef = await FirebaseFirestore.instance
           .collection('emergency_requests')
           .add({
+            "incidentId": incidentId,
+            "isSOS": true,
             "serviceType": "police",
             "userId": FirebaseAuth.instance.currentUser!.uid,
             "user": "SOS User",
             "phone": "N/A",
-
-            "location": {"latitude": 23.55105395451701, "longitude": 34.895463666438},
-
+            "urgency": "critical",
+            "location": {
+              "latitude": 23.55105395451701,
+              "longitude": 34.895463666438,
+            },
             "status": "pending",
             "timestamp": FieldValue.serverTimestamp(),
 
-            // temporary compatibility
+            // compatibility fields
             "type": "Police SOS",
             "name": "SOS User",
             "userLocationName": "Sector 62, Noida",
@@ -65,11 +69,13 @@ class _HomeScreenState extends State<HomeScreen> {
         '/requestSent',
         arguments: {
           "docId": docRef.id,
+          "docIds": [docRef.id],
+          "incidentId": incidentId,
           "type": "Police SOS",
           "name": "SOS User",
           "phone": "N/A",
           "userLocationName": "Sector 62, Noida",
-          "assignedServiceName": "Police Unit (Auto Assigned)",
+          "urgency": "critical",
         },
       );
     } catch (e) {
@@ -106,7 +112,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Icon(Icons.location_on, color: Colors.red),
                   SizedBox(width: 10),
-                  Expanded(child: Text("Your Location: Sector 62, Noida")),
+                  Expanded(
+                    child: Text("Your Location: Sector 62, Noida"),
+                  ),
                 ],
               ),
             ),
@@ -115,7 +123,10 @@ class _HomeScreenState extends State<HomeScreen> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
-              padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 24),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 60,
+                vertical: 24,
+              ),
             ),
             onPressed: isSendingSOS ? null : triggerSOS,
             child: isSendingSOS
@@ -139,7 +150,10 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 20),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 18),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 40,
+                vertical: 18,
+              ),
             ),
             onPressed: () {
               Navigator.pushNamed(context, '/emergency');

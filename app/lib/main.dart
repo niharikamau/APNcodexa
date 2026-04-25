@@ -3,7 +3,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 // Screens
-import 'screens/home_screen.dart';
 import 'screens/emergency_screen.dart';
 import 'screens/location_screen.dart';
 import 'screens/details_screen.dart';
@@ -14,6 +13,9 @@ import 'screens/tracking_screen.dart';
 import 'screens/main_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/sos_settings_screen.dart';
+import 'screens/incident_requests_screen.dart';
+import 'screens/incident_list_screen.dart';
+import 'screens/edit_profile_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,28 +32,23 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
 
-      // 🔥 AUTH BASED ENTRY (THIS IS THE KEY CHANGE)
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
-          // loading
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Scaffold(
               body: Center(child: CircularProgressIndicator()),
             );
           }
 
-          // logged in
           if (snapshot.hasData) {
             return const MainScreen();
           }
 
-          // not logged in
           return const LoginScreen();
         },
       ),
 
-      // routes (keep these)
       routes: {
         '/emergency': (context) => const EmergencyScreen(),
         '/location': (context) => const LocationScreen(),
@@ -61,7 +58,45 @@ class MyApp extends StatelessWidget {
         '/requestDetails': (context) => const RequestDetailsScreen(),
         '/tracking': (context) => const TrackingScreen(),
         '/sosSettings': (context) => const SOSSettingsScreen(),
+        '/incidentRequests': (context) => const IncidentRequestsScreen(),
+        '/incidentList': (context) => const IncidentListScreen(),
+        '/editProfile': (context) => const EditProfileScreen(),
       },
+      theme: ThemeData(
+        primaryColor: Colors.red,
+
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.red,
+          primary: Colors.red,
+          onPrimary: Colors.white, // 🔥 fixes button text globally
+        ),
+
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red,
+            foregroundColor: Colors.white, // 🔥 fixes text color
+            textStyle: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+
+        textSelectionTheme: const TextSelectionThemeData(
+          cursorColor: Colors.red,
+          selectionColor: Colors.redAccent,
+          selectionHandleColor: Colors.red,
+        ),
+        appBarTheme: const AppBarTheme(
+          elevation: 0,
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+
+          titleTextStyle: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.3,
+            color: Colors.black,
+          ),
+        ),
+      ),
     );
   }
 }

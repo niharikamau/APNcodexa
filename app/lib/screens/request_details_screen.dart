@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'main_screen.dart';
 
 class RequestDetailsScreen extends StatelessWidget {
   const RequestDetailsScreen({super.key});
@@ -54,9 +55,7 @@ class RequestDetailsScreen extends StatelessWidget {
             child: Text(
               value,
               textAlign: TextAlign.right,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -71,7 +70,21 @@ class RequestDetailsScreen extends StatelessWidget {
     final docId = args["docId"] as String;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Emergency Details")),
+      appBar: AppBar(
+        title: const Text("Emergency Details"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.home),
+            onPressed: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const MainScreen()),
+                (route) => false,
+              );
+            },
+          ),
+        ],
+      ),
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
             .collection('emergency_requests')
@@ -89,80 +102,120 @@ class RequestDetailsScreen extends StatelessWidget {
           final data = snapshot.data!.data() as Map<String, dynamic>;
           final status = normalizeStatus(data["status"]);
 
-          final serviceType =
-              (data["serviceType"] ?? data["type"] ?? "unknown").toString();
+          final serviceType = (data["serviceType"] ?? data["type"] ?? "unknown")
+              .toString();
           final user = (data["user"] ?? data["name"] ?? "Unknown").toString();
           final phone = (data["phone"] ?? "N/A").toString();
 
           final statusColor = getStatusColor(status);
 
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
+          return SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: statusColor.withOpacity(0.1),
-                    ),
-                    child: Icon(
-                      getStatusIcon(status),
-                      size: 80,
-                      color: statusColor,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    getStatusTitle(status),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: statusColor,
+                  const SizedBox(height: 10),
+
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(22),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: statusColor.withOpacity(0.1),
+                      ),
+                      child: Icon(
+                        getStatusIcon(status),
+                        size: 70,
+                        color: statusColor,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 30),
+
+                  const SizedBox(height: 18),
+
+                  Center(
+                    child: Text(
+                      getStatusTitle(status),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: statusColor,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 28),
+
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
                       color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: Colors.grey.shade300),
                     ),
                     child: Column(
                       children: [
-                        buildInfoRow("Service", serviceType),
+                        buildInfoRow(
+                          "Service",
+                          serviceType.replaceAll(RegExp(r'[^\w\s+]'), ''),
+                        ),
                         buildInfoRow("User", user),
                         buildInfoRow("Phone", phone),
                         buildInfoRow("Status", prettyStatus(status)),
                       ],
                     ),
                   ),
+
+                  const SizedBox(height: 24),
+
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: statusColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        prettyStatus(status),
+                        style: TextStyle(
+                          color: statusColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+
                   const SizedBox(height: 30),
+
                   SizedBox(
                     width: double.infinity,
+                    height: 56,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        backgroundColor: Colors.red,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(16),
                         ),
                       ),
                       onPressed: () {
                         Navigator.pushNamed(
                           context,
                           '/tracking',
-                          arguments: {
-                            "docId": docId,
-                          },
+                          arguments: {"docId": docId},
                         );
                       },
                       child: const Text(
-                        "View Details",
-                        style: TextStyle(fontSize: 16),
+                        "View Tracking",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),

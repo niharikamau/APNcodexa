@@ -35,9 +35,9 @@ class _LoginScreenState extends State<LoginScreen> {
       // main.dart authStateChanges() will handle screen switching automatically
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Auth failed")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Auth failed")));
     }
 
     if (mounted) {
@@ -48,7 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Login")),
+      appBar: AppBar(title: Text(isLogin ? "Login" : "Create Account")),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(

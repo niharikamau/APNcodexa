@@ -51,6 +51,14 @@ class _MainScreenState extends State<MainScreen> {
                 Navigator.pushNamed(context, '/incidentList');
               },
             ),
+            ListTile(
+              leading: const Icon(Icons.edit),
+              title: const Text("Edit Profile"),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/editProfile');
+              },
+            ),
           ],
         ),
       ),

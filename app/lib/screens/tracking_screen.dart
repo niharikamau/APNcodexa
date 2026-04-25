@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'main_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TrackingScreen extends StatelessWidget {
   const TrackingScreen({super.key});
@@ -74,6 +75,9 @@ class TrackingScreen extends StatelessWidget {
           }
 
           final data = snapshot.data!.data() as Map<String, dynamic>;
+          final bool isSOS =
+              data["isSOS"] == true ||
+              (data["type"]?.toString().contains("SOS") ?? false);
           final urgency = (data["urgency"] ?? "low").toString().toLowerCase();
           final status = normalizeStatus(data["status"]);
 
@@ -97,6 +101,13 @@ class TrackingScreen extends StatelessWidget {
               status == "assigned" ||
               status == "on_the_way" ||
               status == "resolved";
+          Future<Map<String, String>> getContacts() async {
+            final prefs = await SharedPreferences.getInstance();
+            return {
+              "c1": prefs.getString("contact1") ?? "Not set",
+              "c2": prefs.getString("contact2") ?? "Not set",
+            };
+          }
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
@@ -154,6 +165,60 @@ class TrackingScreen extends StatelessWidget {
                 ),
 
                 const SizedBox(height: 24),
+                if (isSOS)
+                  FutureBuilder<Map<String, String>>(
+                    future: getContacts(),
+                    builder: (context, snap) {
+                      if (!snap.hasData) return const SizedBox();
+
+                      final contacts = snap.data!;
+
+                      return Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(bottom: 20),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: Colors.red),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "🚨 SOS ACTIVE",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+
+                            buildRow("Contact 1", contacts["c1"]!),
+                            buildRow("Contact 2", contacts["c2"]!),
+
+                            const SizedBox(height: 10),
+
+                            const Row(
+                              children: [
+                                Icon(Icons.location_on, color: Colors.red),
+                                SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    "Live location sent to emergency contacts",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
 
                 buildStep("Request Sent", true),
                 buildStep("Help Assigned", helpAssigned),

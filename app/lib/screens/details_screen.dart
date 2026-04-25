@@ -105,6 +105,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
               controller: phoneController,
               decoration: const InputDecoration(labelText: "Phone Number"),
               keyboardType: TextInputType.phone,
+              maxLength: 10,
             ),
             const SizedBox(height: 30),
             ElevatedButton(

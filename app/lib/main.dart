@@ -15,6 +15,7 @@ import 'screens/login_screen.dart';
 import 'screens/sos_settings_screen.dart';
 import 'screens/incident_requests_screen.dart';
 import 'screens/incident_list_screen.dart';
+import 'screens/edit_profile_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -59,6 +60,7 @@ class MyApp extends StatelessWidget {
         '/sosSettings': (context) => const SOSSettingsScreen(),
         '/incidentRequests': (context) => const IncidentRequestsScreen(),
         '/incidentList': (context) => const IncidentListScreen(),
+        '/editProfile': (context) => const EditProfileScreen(),
       },
     );
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'main_screen.dart';
 
 class IncidentRequestsScreen extends StatelessWidget {
   const IncidentRequestsScreen({super.key});
@@ -53,9 +54,9 @@ class IncidentRequestsScreen extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.home),
               onPressed: () {
-                Navigator.pushNamedAndRemoveUntil(
+                Navigator.pushAndRemoveUntil(
                   context,
-                  '/',
+                  MaterialPageRoute(builder: (_) => const MainScreen()),
                   (route) => false,
                 );
               },
@@ -73,7 +74,11 @@ class IncidentRequestsScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.home),
             onPressed: () {
-              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const MainScreen()),
+                (route) => false,
+              );
             },
           ),
         ],

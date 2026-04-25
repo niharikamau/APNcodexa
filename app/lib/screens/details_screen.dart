@@ -111,11 +111,36 @@ class _DetailsScreenState extends State<DetailsScreen> {
               onPressed: isLoading
                   ? null
                   : () async {
-                      if (nameController.text.isEmpty ||
-                          phoneController.text.isEmpty) {
+                      final name = nameController.text.trim();
+                      final phone = phoneController.text.trim();
+
+                      final nameRegex = RegExp(r'^[a-zA-Z ]+$');
+                      final phoneRegex = RegExp(r'^[0-9]{10}$');
+
+                      if (name.isEmpty || phone.isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text("Please fill all details"),
+                          ),
+                        );
+                        return;
+                      }
+
+                      if (!nameRegex.hasMatch(name)) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Name should contain alphabets only"),
+                          ),
+                        );
+                        return;
+                      }
+
+                      if (!phoneRegex.hasMatch(phone)) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              "Phone number must be exactly 10 digits",
+                            ),
                           ),
                         );
                         return;
@@ -144,8 +169,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
                             "incidentId": incidentId,
                             "serviceType": serviceType,
                             "userId": FirebaseAuth.instance.currentUser!.uid,
-                            "user": nameController.text,
-                            "phone": phoneController.text,
+                            "user": name,
+                            "phone": phone,
                             "description": description,
                             "urgency": urgency,
                             "location": {
@@ -157,7 +182,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
                             // temporary compatibility
                             "type": getPrettyServiceLabel(serviceType),
-                            "name": nameController.text,
+                            "name": name,
                             "userLocationName": dummyUserLocation["name"],
                           };
 
@@ -181,8 +206,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
                             "type": services
                                 .map(getPrettyServiceLabel)
                                 .join(" + "),
-                            "name": nameController.text,
-                            "phone": phoneController.text,
+                            "name": name,
+                            "phone": phone,
                             "userLocationName": dummyUserLocation["name"],
                           },
                         );

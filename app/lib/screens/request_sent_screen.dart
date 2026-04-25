@@ -183,7 +183,7 @@ class RequestSentScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  if (docId != null)
+                  if (docId != null && docIds.length >1)
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton(

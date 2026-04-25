@@ -164,6 +164,24 @@ class TrackingScreen extends StatelessWidget {
                 buildStep("Resolved", status == "resolved"),
 
                 const SizedBox(height: 30),
+                if (status != "on_the_way" && status != "resolved")
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.red,
+                        side: const BorderSide(color: Colors.red),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      onPressed: () {
+                        cancelRequest(context, docId);
+                      },
+                      child: const Text("Cancel Request"),
+                    ),
+                  ),
+
+                if (status != "on_the_way" && status != "resolved")
+                  const SizedBox(height: 20),
 
                 buildCard(
                   title: "📍 User Location",
@@ -265,5 +283,42 @@ class TrackingScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> cancelRequest(BuildContext context, String docId) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Cancel request?"),
+          content: const Text("Are you sure you want to cancel this request?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text("No"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text("Yes"),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm != true) return;
+
+    await FirebaseFirestore.instance
+        .collection('emergency_requests')
+        .doc(docId)
+        .delete();
+
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text("Request cancelled")));
+
+    Navigator.pop(context);
   }
 }

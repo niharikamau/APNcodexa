@@ -62,6 +62,41 @@ class MyApp extends StatelessWidget {
         '/incidentList': (context) => const IncidentListScreen(),
         '/editProfile': (context) => const EditProfileScreen(),
       },
+      theme: ThemeData(
+        primaryColor: Colors.red,
+
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.red,
+          primary: Colors.red,
+          onPrimary: Colors.white, // 🔥 fixes button text globally
+        ),
+
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red,
+            foregroundColor: Colors.white, // 🔥 fixes text color
+            textStyle: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+
+        textSelectionTheme: const TextSelectionThemeData(
+          cursorColor: Colors.red,
+          selectionColor: Colors.redAccent,
+          selectionHandleColor: Colors.red,
+        ),
+        appBarTheme: const AppBarTheme(
+          elevation: 0,
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+
+          titleTextStyle: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.3,
+            color: Colors.black,
+          ),
+        ),
+      ),
     );
   }
 }

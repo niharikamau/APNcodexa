@@ -19,9 +19,9 @@ class IncidentRequestsScreen extends StatelessWidget {
 
   String getServiceLabel(Map<String, dynamic> data) {
     final serviceType = data["serviceType"]?.toString().toLowerCase();
-    if (serviceType == "ambulance") return "🚑 Ambulance";
-    if (serviceType == "police") return "👮 Police";
-    if (serviceType == "fire") return "🔥 Fire";
+    if (serviceType == "ambulance") return "Ambulance";
+    if (serviceType == "police") return "Police";
+    if (serviceType == "fire") return "Fire";
     return data["type"]?.toString() ?? "Unknown Service";
   }
 
@@ -36,6 +36,34 @@ class IncidentRequestsScreen extends StatelessWidget {
   bool isSosRequest(Map<String, dynamic> data) {
     return data["isSOS"] == true ||
         (data["type"]?.toString().contains("SOS") ?? false);
+  }
+
+  Widget _pill(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+        ),
+      ),
+    );
+  }
+
+  IconData _getServiceIcon(Map<String, dynamic> data) {
+    final type = data["serviceType"]?.toString().toLowerCase();
+
+    if (type == "ambulance") return Icons.local_hospital;
+    if (type == "police") return Icons.local_police;
+    if (type == "fire") return Icons.local_fire_department;
+
+    return Icons.warning_amber_rounded;
   }
 
   @override
@@ -133,7 +161,8 @@ class IncidentRequestsScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: Colors.grey.shade300),
                   ),
                   child: Text(
                     isSosGroup ? "SOS Incidents" : "Incident ID: $incidentId",
@@ -150,21 +179,16 @@ class IncidentRequestsScreen extends StatelessWidget {
                       final status = normalizeStatus(data["status"]);
                       final statusColor = getStatusColor(status);
 
-                      return Card(
+                      return Container(
                         margin: const EdgeInsets.only(bottom: 12),
-                        child: ListTile(
-                          title: Text(
-                            getServiceLabel(data),
-                            style: TextStyle(
-                              color: statusColor,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          subtitle: Text(
-                            "Status: ${prettyStatus(status)}\n"
-                            "User: ${(data["user"] ?? data["name"] ?? "-").toString()}",
-                          ),
-                          trailing: const Icon(Icons.chevron_right),
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(16),
                           onTap: () {
                             Navigator.pushNamed(
                               context,
@@ -172,6 +196,58 @@ class IncidentRequestsScreen extends StatelessWidget {
                               arguments: {"docId": doc.id},
                             );
                           },
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    height: 42,
+                                    width: 42,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Icon(
+                                      _getServiceIcon(data),
+                                      color: statusColor,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+
+                                  Expanded(
+                                    child: Text(
+                                      getServiceLabel(
+                                        data,
+                                      ).replaceAll(RegExp(r'[^\w\s+]'), ''),
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+
+                                  const Icon(Icons.chevron_right),
+                                ],
+                              ),
+
+                              const SizedBox(height: 12),
+
+                              Wrap(
+                                spacing: 8,
+                                children: [
+                                  _pill(prettyStatus(status), statusColor),
+                                ],
+                              ),
+
+                              const SizedBox(height: 10),
+
+                              Text(
+                                "User: ${(data["user"] ?? data["name"] ?? "-").toString()}",
+                                style: const TextStyle(color: Colors.black87),
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     },

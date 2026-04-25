@@ -27,9 +27,9 @@ class IncidentListScreen extends StatelessWidget {
 
   String getServiceLabel(String serviceType) {
     final type = serviceType.toLowerCase();
-    if (type == "ambulance") return "🚑 Ambulance";
-    if (type == "police") return "👮 Police";
-    if (type == "fire") return "🔥 Fire";
+    if (type == "ambulance") return "Ambulance";
+    if (type == "police") return "Police";
+    if (type == "fire") return "Fire";
     return serviceType;
   }
 
@@ -37,6 +37,31 @@ class IncidentListScreen extends StatelessWidget {
     return data["isSOS"] == true ||
         (data["type"]?.toString().contains("SOS") ?? false);
   }
+  Widget _pill(String text, Color color) {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    decoration: BoxDecoration(
+      color: color.withOpacity(0.1),
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Text(
+      text,
+      style: TextStyle(
+        color: color,
+        fontWeight: FontWeight.bold,
+        fontSize: 12,
+      ),
+    ),
+  );
+}
+
+Color _urgencyColor(String urgency) {
+  final u = urgency.toLowerCase();
+  if (u == "critical") return Colors.red;
+  if (u == "high") return Colors.orange;
+  if (u == "medium") return Colors.blue;
+  return Colors.grey;
+}
 
   @override
   Widget build(BuildContext context) {
@@ -164,34 +189,20 @@ class IncidentListScreen extends StatelessWidget {
                   (firstData["userLocationName"] ?? "Unknown location")
                       .toString();
 
-              return Card(
+              return Container(
                 margin: const EdgeInsets.only(bottom: 14),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.all(14),
-                  title: Text(
-                    sosGroup ? "SOS Incident" : incidentId,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: sosGroup
+                        ? Colors.red.withOpacity(0.5)
+                        : Colors.grey.shade300,
                   ),
-                  subtitle: Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("Services: ${services.join(", ")}"),
-                        Text("Urgency: ${urgency.toUpperCase()}"),
-                        Text("Location: $locationName"),
-                        Text(
-                          "Overall Status: ${prettyStatus(overallStatus)}",
-                          style: TextStyle(
-                            color: getStatusColor(overallStatus),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Text("Requests: ${requests.length}"),
-                      ],
-                    ),
-                  ),
-                  trailing: const Icon(Icons.chevron_right),
+                ),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(18),
                   onTap: () {
                     Navigator.pushNamed(
                       context,
@@ -202,6 +213,77 @@ class IncidentListScreen extends StatelessWidget {
                       },
                     );
                   },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            height: 44,
+                            width: 44,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: Icon(
+                              sosGroup
+                                  ? Icons.warning_amber_rounded
+                                  : Icons.folder_outlined,
+                              color: sosGroup ? Colors.red : Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+
+                          Expanded(
+                            child: Text(
+                              sosGroup ? "SOS Incident" : incidentId,
+                              style: const TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+
+                          const Icon(Icons.chevron_right),
+                        ],
+                      ),
+
+                      const SizedBox(height: 14),
+
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          _pill(
+                            prettyStatus(overallStatus),
+                            getStatusColor(overallStatus),
+                          ),
+                          _pill(urgency.toUpperCase(), _urgencyColor(urgency)),
+                        ],
+                      ),
+
+                      const SizedBox(height: 14),
+
+                      Text(
+                        "Services: ${services.join(", ")}",
+                        style: const TextStyle(color: Colors.black87),
+                      ),
+
+                      const SizedBox(height: 4),
+
+                      Text(
+                        "Location: $locationName",
+                        style: const TextStyle(color: Colors.black54),
+                      ),
+
+                      const SizedBox(height: 4),
+
+                      Text(
+                        "Requests: ${requests.length}",
+                        style: const TextStyle(color: Colors.black54),
+                      ),
+                    ],
+                  ),
                 ),
               );
             },

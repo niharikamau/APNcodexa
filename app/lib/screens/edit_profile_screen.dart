@@ -100,6 +100,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     Navigator.pop(context);
   }
 
+  Widget sectionTitle(String title) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 20, bottom: 10),
+        child: Text(
+          title,
+          style: const TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget input(
     String label,
     TextEditingController controller, {
@@ -116,7 +132,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         maxLength: maxLength,
         decoration: InputDecoration(
           labelText: label,
-          border: const OutlineInputBorder(),
+          filled: true,
+          fillColor: Colors.grey.shade100,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide.none,
+          ),
         ),
       ),
     );
@@ -142,9 +163,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
           child: Column(
             children: [
+              sectionTitle("Account"),
+
               input("Full Name", name),
               input(
                 "Phone Number",
@@ -152,23 +175,41 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 keyboardType: TextInputType.phone,
                 maxLength: 10,
               ),
+
+              sectionTitle("Medical"),
+
               input("Blood Group", bloodGroup),
               input("Allergies", allergies, maxLines: 2),
               input("Medical Conditions", medicalConditions, maxLines: 2),
-              input("Current Medications", medications, maxLines: 2),
+              input("Medications", medications, maxLines: 2),
+
+              sectionTitle("Emergency"),
+
               input(
                 "Emergency Contact",
                 emergencyContact,
                 keyboardType: TextInputType.phone,
                 maxLength: 10,
               ),
-              input("Address / Location", address, maxLines: 2),
-              const SizedBox(height: 10),
+              input("Address", address, maxLines: 2),
+
+              const SizedBox(height: 20),
+
               SizedBox(
                 width: double.infinity,
+                height: 54,
                 child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
                   onPressed: saveProfile,
-                  child: const Text("Save Profile"),
+                  child: const Text(
+                    "Save Changes",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ],

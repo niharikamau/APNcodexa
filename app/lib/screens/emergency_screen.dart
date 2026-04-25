@@ -160,84 +160,123 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
     );
   }
 
-  Widget buildServiceButton(String label, String value) {
-    final isSelected = selectedServices.contains(value);
+  Widget buildServiceButton(String label, String value, IconData icon) {
+  final isSelected = selectedServices.contains(value);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.all(18),
-            backgroundColor: isSelected ? Colors.blue : null,
-          ),
-          onPressed: () {
-            setState(() {
-              if (selectedServices.contains(value)) {
-                selectedServices.remove(value);
-              } else {
-                selectedServices.add(value);
-              }
-            });
-          },
-          child: Text(label, style: const TextStyle(fontSize: 18)),
+  return GestureDetector(
+    onTap: () {
+      setState(() {
+        if (isSelected) {
+          selectedServices.remove(value);
+        } else {
+          selectedServices.add(value);
+        }
+      });
+    },
+    child: Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isSelected ? Colors.red.withOpacity(0.1) : Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: isSelected ? Colors.red : Colors.grey.shade300,
         ),
       ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Emergency"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.home),
-            onPressed: () {
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const MainScreen()),
-                (route) => false,
-              );
-            },
+      child: Row(
+        children: [
+          Icon(icon, color: isSelected ? Colors.red : Colors.black54),
+          const SizedBox(width: 12),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: isSelected ? Colors.red : Colors.black,
+            ),
           ),
         ],
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              const Text(
-                "Select Emergency Type (Optional)",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+    ),
+  );
+}
+
+  @override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text("Report Emergency"),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.home),
+          onPressed: () {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => const MainScreen()),
+              (route) => false,
+            );
+          },
+        ),
+      ],
+    ),
+    body: SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Select Services",
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
               ),
-              const SizedBox(height: 20),
+            ),
 
-              buildServiceButton("🚑 Medical", "ambulance"),
-              buildServiceButton("🔥 Fire", "fire"),
-              buildServiceButton("👮 Police", "police"),
+            const SizedBox(height: 6),
 
-              const SizedBox(height: 25),
+            const Text(
+              "Choose services or describe the situation below.",
+              style: TextStyle(color: Colors.black54),
+            ),
 
-              Row(
+            const SizedBox(height: 20),
+
+            buildServiceButton("Medical", "ambulance", Icons.local_hospital),
+            buildServiceButton("Fire", "fire", Icons.local_fire_department),
+            buildServiceButton("Police", "police", Icons.local_police),
+
+            const SizedBox(height: 28),
+
+            const Text(
+              "Description",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: TextField(
                       controller: descriptionController,
                       maxLines: 4,
-                      decoration: InputDecoration(
-                        hintText: "Describe emergency or use mic...",
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                      decoration: const InputDecoration(
+                        hintText: "Describe the emergency...",
+                        border: InputBorder.none,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 10),
                   IconButton(
                     icon: Icon(
                       _isListening ? Icons.mic : Icons.mic_none,
@@ -247,26 +286,34 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
                   ),
                 ],
               ),
+            ),
 
-              const SizedBox(height: 25),
+            const SizedBox(height: 30),
 
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: handleSubmit,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 60,
+              child: ElevatedButton(
+                onPressed: handleSubmit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
                   ),
-                  child: const Text(
-                    "Send Emergency Request",
-                    style: TextStyle(fontSize: 16),
+                ),
+                child: const Text(
+                  "Submit Request",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

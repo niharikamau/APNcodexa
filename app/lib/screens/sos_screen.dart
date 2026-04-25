@@ -50,8 +50,8 @@ class _SOSScreenState extends State<SOSScreen> {
         "urgency": "critical",
 
         "location": {
-          "latitude": 23.55105395451701,
-          "longitude": 34.895463666438,
+          "latitude": 28.622934,
+          "longitude": 77.364026,
         },
 
         "status": "pending",

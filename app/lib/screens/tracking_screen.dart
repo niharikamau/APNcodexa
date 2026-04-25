@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'main_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class TrackingScreen extends StatelessWidget {
   const TrackingScreen({super.key});
@@ -103,9 +104,19 @@ class TrackingScreen extends StatelessWidget {
               status == "resolved";
           Future<Map<String, String>> getContacts() async {
             final prefs = await SharedPreferences.getInstance();
+            final uid = FirebaseAuth.instance.currentUser?.uid;
+            if(uid==null){
+              return{
+                "c1": "Not set",
+                "c2": "Not set",
+              };
+            }
+            final c1 = prefs.getString("${uid}_contact1") ?? "";
+            final c2 = prefs.getString("${uid}_contact2") ?? "";
+
             return {
-              "c1": prefs.getString("contact1") ?? "Not set",
-              "c2": prefs.getString("contact2") ?? "Not set",
+              "c1": c1.trim().isEmpty ? "Not set" : c1.trim(),
+              "c2": c2.trim().isEmpty ? "Not set" : c2.trim(),
             };
           }
 

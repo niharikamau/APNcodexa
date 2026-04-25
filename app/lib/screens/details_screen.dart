@@ -42,8 +42,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
   final Map<String, dynamic> dummyUserLocation = {
     "name": "Sector 62, Noida",
-    "lat": 23.55105395451701,
-    "lng": 34.895463666438,
+    "lat": 28.622934,
+    "lng": 77.364026,
   };
 
   String getPrettyServiceLabel(String serviceType) {

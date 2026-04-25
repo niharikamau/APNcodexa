@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -53,10 +54,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           prefs.getString("${uid}_emergencyContact"),
           "Add Emergency Contact",
         ),
-        "address": fallback(
-          prefs.getString("${uid}_address"),
-          "Add Address",
-        ),
+        "address": fallback(prefs.getString("${uid}_address"), "Add Address"),
       };
     });
   }
@@ -68,10 +66,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: const EdgeInsets.only(bottom: 10, top: 8),
         child: Text(
           title,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
       ),
     );
@@ -117,11 +112,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   value,
                   style: TextStyle(
                     fontSize: 15,
-                    fontWeight:
-                        isPlaceholder ? FontWeight.w500 : FontWeight.w700,
+                    fontWeight: isPlaceholder
+                        ? FontWeight.w500
+                        : FontWeight.w700,
                     color: isPlaceholder ? Colors.grey : Colors.black,
-                    fontStyle:
-                        isPlaceholder ? FontStyle.italic : FontStyle.normal,
+                    fontStyle: isPlaceholder
+                        ? FontStyle.italic
+                        : FontStyle.normal,
                   ),
                 ),
               ],
@@ -153,11 +150,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const CircleAvatar(
                     radius: 46,
                     backgroundColor: Colors.red,
-                    child: Icon(
-                      Icons.person,
-                      size: 54,
-                      color: Colors.white,
-                    ),
+                    child: Icon(Icons.person, size: 54, color: Colors.white),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -264,6 +257,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 onPressed: () async {
                   await FirebaseAuth.instance.signOut();
+
+                  if (!context.mounted) return;
+
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/login',
+                    (route) => false,
+                  );
                 },
                 child: const Text(
                   "Logout",

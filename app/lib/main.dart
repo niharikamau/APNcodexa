@@ -61,6 +61,7 @@ class MyApp extends StatelessWidget {
         '/incidentRequests': (context) => const IncidentRequestsScreen(),
         '/incidentList': (context) => const IncidentListScreen(),
         '/editProfile': (context) => const EditProfileScreen(),
+        '/login': (context) => const LoginScreen(),
       },
       theme: ThemeData(
         primaryColor: Colors.red,

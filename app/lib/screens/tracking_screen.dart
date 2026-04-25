@@ -373,10 +373,30 @@ class TrackingScreen extends StatelessWidget {
 
     if (confirm != true) return;
 
-    await FirebaseFirestore.instance
+    final requestRef = FirebaseFirestore.instance
         .collection('emergency_requests')
-        .doc(docId)
-        .delete();
+        .doc(docId);
+
+    final docSnap = await requestRef.get();
+
+    if (!docSnap.exists) return;
+
+    final data = docSnap.data() as Map<String, dynamic>;
+
+    final assignedProviderCollection = data["assignedProviderCollection"];
+    final assignedProviderFirestoreId = data["assignedProviderFirestoreId"];
+
+    // ✅ Make assigned provider available again
+    if (assignedProviderCollection != null &&
+        assignedProviderFirestoreId != null) {
+      await FirebaseFirestore.instance
+          .collection(assignedProviderCollection)
+          .doc(assignedProviderFirestoreId)
+          .update({"available": true});
+    }
+
+    // ✅ Delete request
+    await requestRef.delete();
 
     if (!context.mounted) return;
 

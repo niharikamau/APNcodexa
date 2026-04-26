@@ -13,12 +13,22 @@ function App() {
   const [ambulances, setAmbulances] = useState([]);
   const [policeUnits, setPoliceUnits] = useState([]);
   const [fireUnits, setFireUnits] = useState([]);
-  const [filter, setFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [urgencyFilter, setUrgencyFilter] = useState("all");
 
   const audioRef = useRef(null);
   const hasLoadedRef = useRef(false);
   const prevPendingIdsRef = useRef(new Set());
   const assigningIdsRef = useRef(new Set());
+
+  const MAX_DISTANCE_KM = 5;
+
+  const urgencyOrder = {
+    CRITICAL: 1,
+    HIGH: 2,
+    MEDIUM: 3,
+    LOW: 4,
+  };
 
   useEffect(() => {
     audioRef.current = new Audio("/alert.mp3");
@@ -97,7 +107,14 @@ function App() {
   useEffect(() => {
     if (alerts.length === 0) return;
 
-    alerts.forEach((alertItem) => {
+    const sortedAlerts = [...alerts].sort((a, b) => {
+      const urgencyA = inferUrgency(a);
+      const urgencyB = inferUrgency(b);
+
+      return urgencyOrder[urgencyA] - urgencyOrder[urgencyB];
+    });
+
+    sortedAlerts.forEach((alertItem) => {
       const validRequest =
         alertItem.serviceType &&
         alertItem.location &&
@@ -141,9 +158,11 @@ function App() {
     if (type === "ambulance") {
       return { collectionName: "ambulances", providers: ambulances };
     }
+
     if (type === "police") {
       return { collectionName: "police_units", providers: policeUnits };
     }
+
     if (type === "fire" || type === "fire brigade") {
       return { collectionName: "fire_units", providers: fireUnits };
     }
@@ -186,7 +205,8 @@ function App() {
 
       if (!nearestProvider) return;
 
-      if (minDistance > 2) return;
+      // 5 km rule
+      if (minDistance > MAX_DISTANCE_KM) return;
 
       const requestRef = doc(db, "emergency_requests", alertItem.id);
       const providerRef = doc(db, collectionName, nearestProvider.firestoreId);
@@ -209,7 +229,8 @@ function App() {
           assignedProviderId: providerData.id || nearestProvider.firestoreId,
           assignedProviderFirestoreId: nearestProvider.firestoreId,
           assignedProviderCollection: collectionName,
-          assignedProviderName: providerData.serviceProviderName || "Unknown Provider",
+          assignedProviderName:
+            providerData.serviceProviderName || "Unknown Provider",
           assignedProviderPhone: providerData.phone || "N/A",
           assignedDistanceKm: minDistance.toFixed(2),
         });
@@ -258,13 +279,72 @@ function App() {
   };
 
   const getEffectiveStatus = (alertItem) => {
+    const distance = parseFloat(alertItem.assignedDistanceKm);
+
     if (
       alertItem.status === "pending" &&
       (alertItem.assignedProviderId || alertItem.assignedProviderName)
     ) {
-      return "assigned";
+      if (!isNaN(distance) && distance <= MAX_DISTANCE_KM) {
+        return "assigned";
+      }
+      return "pending";
     }
+
     return alertItem.status;
+  };
+
+  const inferUrgency = (alertItem) => {
+    const savedUrgency = alertItem.urgency || alertItem.Urgency;
+
+    if (savedUrgency) return savedUrgency.toUpperCase();
+
+    const text = `${alertItem.description || ""} ${alertItem.serviceType || ""}`.toLowerCase();
+
+    if (
+      text.includes("fire") ||
+      text.includes("smoke") ||
+      text.includes("burn") ||
+      text.includes("blood") ||
+      text.includes("bleeding") ||
+      text.includes("unconscious") ||
+      text.includes("heart") ||
+      text.includes("attack")
+    ) {
+      return "CRITICAL";
+    }
+
+    if (
+      text.includes("accident") ||
+      text.includes("robbery") ||
+      text.includes("fight") ||
+      text.includes("theft") ||
+      text.includes("snatching") ||
+      text.includes("injury") ||
+      text.includes("kidnap") ||
+      text.includes("kidnapping") ||
+      text.includes("abduct") ||
+      text.includes("abduction")
+    ) {
+      return "HIGH";
+    }
+
+    if (
+      text.includes("pain") ||
+      text.includes("dizzy") ||
+      text.includes("help")
+    ) {
+      return "MEDIUM";
+    }
+
+    return "LOW";
+  };
+
+  const getUrgencyColor = (urgency) => {
+    if (urgency === "CRITICAL") return "#dc2626";
+    if (urgency === "HIGH") return "#ea580c";
+    if (urgency === "MEDIUM") return "#ca8a04";
+    return "#16a34a";
   };
 
   const getCardColor = (status) => {
@@ -315,17 +395,44 @@ function App() {
       alertItem.location.longitude != null
   );
 
-  const filteredAlerts = validAlerts.filter((alertItem) => {
-    const effectiveStatus = getEffectiveStatus(alertItem);
-    if (filter === "all") return true;
-    return effectiveStatus === filter;
-  });
+  const filteredAlerts = validAlerts
+    .filter((alertItem) => {
+      const effectiveStatus = getEffectiveStatus(alertItem);
+      const urgency = inferUrgency(alertItem);
+
+      const statusOk =
+        statusFilter === "all" || effectiveStatus === statusFilter;
+
+      const urgencyOk =
+        urgencyFilter === "all" || urgency === urgencyFilter;
+
+      return statusOk && urgencyOk;
+    })
+    .sort((a, b) => {
+      const urgencyA = inferUrgency(a);
+      const urgencyB = inferUrgency(b);
+
+      return urgencyOrder[urgencyA] - urgencyOrder[urgencyB];
+    });
 
   const totalCount = validAlerts.length;
-  const pendingCount = validAlerts.filter((a) => getEffectiveStatus(a) === "pending").length;
-  const assignedCount = validAlerts.filter((a) => getEffectiveStatus(a) === "assigned").length;
-  const onTheWayCount = validAlerts.filter((a) => getEffectiveStatus(a) === "on_the_way").length;
-  const resolvedCount = validAlerts.filter((a) => getEffectiveStatus(a) === "resolved").length;
+  const pendingCount = validAlerts.filter(
+    (a) => getEffectiveStatus(a) === "pending"
+  ).length;
+  const assignedCount = validAlerts.filter(
+    (a) => getEffectiveStatus(a) === "assigned"
+  ).length;
+  const onTheWayCount = validAlerts.filter(
+    (a) => getEffectiveStatus(a) === "on_the_way"
+  ).length;
+  const resolvedCount = validAlerts.filter(
+    (a) => getEffectiveStatus(a) === "resolved"
+  ).length;
+
+  const criticalCount = validAlerts.filter(
+    (a) => inferUrgency(a) === "CRITICAL"
+  ).length;
+  const highCount = validAlerts.filter((a) => inferUrgency(a) === "HIGH").length;
 
   return (
     <div
@@ -357,18 +464,28 @@ function App() {
         }}
       >
         <SummaryCard label="Total" value={totalCount} color="#111827" />
+        <SummaryCard label="Critical" value={criticalCount} color="#dc2626" />
+        <SummaryCard label="High" value={highCount} color="#ea580c" />
         <SummaryCard label="Pending" value={pendingCount} color="#ef4444" />
         <SummaryCard label="Assigned" value={assignedCount} color="#f97316" />
         <SummaryCard label="On The Way" value={onTheWayCount} color="#3b82f6" />
         <SummaryCard label="Resolved" value={resolvedCount} color="#22c55e" />
       </div>
 
+      <div style={{ textAlign: "center", marginBottom: "12px" }}>
+        <button onClick={() => setStatusFilter("all")} style={filterBtnStyle}>All</button>
+        <button onClick={() => setStatusFilter("pending")} style={filterBtnStyle}>Pending</button>
+        <button onClick={() => setStatusFilter("assigned")} style={filterBtnStyle}>Assigned</button>
+        <button onClick={() => setStatusFilter("on_the_way")} style={filterBtnStyle}>On The Way</button>
+        <button onClick={() => setStatusFilter("resolved")} style={filterBtnStyle}>Resolved</button>
+      </div>
+
       <div style={{ textAlign: "center", marginBottom: "28px" }}>
-        <button onClick={() => setFilter("all")} style={filterBtnStyle}>All</button>
-        <button onClick={() => setFilter("pending")} style={filterBtnStyle}>Pending</button>
-        <button onClick={() => setFilter("assigned")} style={filterBtnStyle}>Assigned</button>
-        <button onClick={() => setFilter("on_the_way")} style={filterBtnStyle}>On The Way</button>
-        <button onClick={() => setFilter("resolved")} style={filterBtnStyle}>Resolved</button>
+        <button onClick={() => setUrgencyFilter("all")} style={filterBtnStyle}>All Urgency</button>
+        <button onClick={() => setUrgencyFilter("CRITICAL")} style={filterBtnStyle}>Critical</button>
+        <button onClick={() => setUrgencyFilter("HIGH")} style={filterBtnStyle}>High</button>
+        <button onClick={() => setUrgencyFilter("MEDIUM")} style={filterBtnStyle}>Medium</button>
+        <button onClick={() => setUrgencyFilter("LOW")} style={filterBtnStyle}>Low</button>
       </div>
 
       {filteredAlerts.length === 0 ? (
@@ -386,8 +503,13 @@ function App() {
         >
           {filteredAlerts.map((alertItem) => {
             const effectiveStatus = getEffectiveStatus(alertItem);
-            const waitingForNearbyProvider =
-              effectiveStatus === "pending" && !alertItem.assignedProviderId;
+            const urgency = inferUrgency(alertItem);
+            const assignedDistance = parseFloat(alertItem.assignedDistanceKm);
+
+            const isNearbyAssigned =
+              !isNaN(assignedDistance) && assignedDistance <= MAX_DISTANCE_KM;
+
+            const waitingForNearbyProvider = effectiveStatus === "pending";
 
             return (
               <div
@@ -401,32 +523,61 @@ function App() {
                   boxShadow: "0 8px 20px rgba(0,0,0,0.12)",
                 }}
               >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: "10px",
+                    flexWrap: "wrap",
+                  }}
+                >
                   <h2 style={{ marginTop: 0, marginBottom: "12px" }}>
                     {getServiceEmoji(alertItem.serviceType)} {alertItem.serviceType}
                   </h2>
-                  <span
-                    style={{
-                      backgroundColor: getStatusBadgeColor(effectiveStatus),
-                      color: "white",
-                      padding: "6px 10px",
-                      borderRadius: "999px",
-                      fontSize: "12px",
-                      fontWeight: "700",
-                      textTransform: "capitalize",
-                    }}
-                  >
-                    {effectiveStatus}
-                  </span>
+
+                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                    <span
+                      style={{
+                        backgroundColor: getUrgencyColor(urgency),
+                        color: "white",
+                        padding: "6px 10px",
+                        borderRadius: "999px",
+                        fontSize: "12px",
+                        fontWeight: "700",
+                      }}
+                    >
+                      {urgency}
+                    </span>
+
+                    <span
+                      style={{
+                        backgroundColor: getStatusBadgeColor(effectiveStatus),
+                        color: "white",
+                        padding: "6px 10px",
+                        borderRadius: "999px",
+                        fontSize: "12px",
+                        fontWeight: "700",
+                        textTransform: "capitalize",
+                      }}
+                    >
+                      {effectiveStatus}
+                    </span>
+                  </div>
                 </div>
 
                 <p><b>ID:</b> {alertItem.id}</p>
                 <p><b>User:</b> {alertItem.user}</p>
+                <p><b>Description:</b> {alertItem.description || "Not available"}</p>
 
                 <p>
                   <b>Location:</b>{" "}
                   {getMapLink(alertItem.location) ? (
-                    <a href={getMapLink(alertItem.location)} target="_blank" rel="noreferrer">
+                    <a
+                      href={getMapLink(alertItem.location)}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
                       View on Map 📍
                     </a>
                   ) : (
@@ -441,21 +592,45 @@ function App() {
                     : "N/A"}
                 </p>
 
-                <hr style={{ margin: "14px 0", border: "none", borderTop: "1px solid #d1d5db" }} />
+                <hr
+                  style={{
+                    margin: "14px 0",
+                    border: "none",
+                    borderTop: "1px solid #d1d5db",
+                  }}
+                />
 
-                <p><b>Provider:</b> {alertItem.assignedProviderName || "Not assigned yet"}</p>
-                <p><b>Phone:</b> {alertItem.assignedProviderPhone || "N/A"}</p>
-                <p><b>Distance:</b> {alertItem.assignedDistanceKm ? `${alertItem.assignedDistanceKm} km` : "N/A"}</p>
+                <p>
+                  <b>Provider:</b>{" "}
+                  {isNearbyAssigned ? alertItem.assignedProviderName : "Not assigned yet"}
+                </p>
+
+                <p>
+                  <b>Phone:</b>{" "}
+                  {isNearbyAssigned ? alertItem.assignedProviderPhone : "N/A"}
+                </p>
+
+                <p>
+                  <b>Distance:</b>{" "}
+                  {isNearbyAssigned ? `${alertItem.assignedDistanceKm} km` : "N/A"}
+                </p>
 
                 {waitingForNearbyProvider && (
                   <p style={{ color: "#ef4444", fontWeight: "700" }}>
-                    Waiting for Provider within 2 km
+                    Waiting for Provider within 5 km
                   </p>
                 )}
 
                 <div style={{ marginTop: "16px" }}>
                   {effectiveStatus === "pending" && (
-                    <button disabled style={{ ...actionBtnStyle, backgroundColor: "#9ca3af", cursor: "not-allowed" }}>
+                    <button
+                      disabled
+                      style={{
+                        ...actionBtnStyle,
+                        backgroundColor: "#9ca3af",
+                        cursor: "not-allowed",
+                      }}
+                    >
                       Waiting for Assignment
                     </button>
                   )}
@@ -479,7 +654,14 @@ function App() {
                   )}
 
                   {effectiveStatus === "resolved" && (
-                    <button disabled style={{ ...actionBtnStyle, backgroundColor: "#22c55e", cursor: "not-allowed" }}>
+                    <button
+                      disabled
+                      style={{
+                        ...actionBtnStyle,
+                        backgroundColor: "#22c55e",
+                        cursor: "not-allowed",
+                      }}
+                    >
                       Completed
                     </button>
                   )}
@@ -509,9 +691,7 @@ function SummaryCard({ label, value, color }) {
       <div style={{ fontSize: "14px", color: "#6b7280", marginBottom: "6px" }}>
         {label}
       </div>
-      <div style={{ fontSize: "26px", fontWeight: "800", color }}>
-        {value}
-      </div>
+      <div style={{ fontSize: "26px", fontWeight: "800", color }}>{value}</div>
     </div>
   );
 }
